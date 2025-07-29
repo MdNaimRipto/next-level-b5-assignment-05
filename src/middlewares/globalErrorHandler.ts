@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { ErrorRequestHandler } from "express";
-import config from "../config/config";
+import { envConfig } from "../config/config";
 import { IGenericErrorMessages } from "../interface/error";
 import handleValidationError from "../errors/handleValidationError";
 import { ZodError } from "zod";
@@ -10,7 +10,7 @@ import handleCastError from "../errors/handleCastError";
 import handleDuplicationError from "../errors/handleDuplicationError";
 
 const globalErrorHandler: ErrorRequestHandler = (error, req, res, next) => {
-  config.node_env === "development"
+  envConfig.node_env === "development"
     ? console.log(`GlobalErrorHandler~~`, error)
     : console.error(`GlobalErrorHandler~~`, error);
 
@@ -71,7 +71,7 @@ const globalErrorHandler: ErrorRequestHandler = (error, req, res, next) => {
     statusCode,
     message,
     errorMessages,
-    stack: config.node_env === "production" ? undefined : error?.stack,
+    stack: envConfig.node_env === "production" ? undefined : error?.stack,
   });
 };
 

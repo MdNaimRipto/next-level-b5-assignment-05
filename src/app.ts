@@ -21,7 +21,7 @@ app.get("/", async (req: Request, res: Response) => {
 });
 
 //* Main endpoint
-app.use("/api/v1.0", Routers);
+app.use("/v1.0.0/apis", Routers);
 
 //* Global error Handler
 app.use(globalErrorHandler);

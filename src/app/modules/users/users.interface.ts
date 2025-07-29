@@ -4,6 +4,8 @@ export type isActiveEnums = "active" | "offline" | "idle";
 export interface IUserLocation {
   street: string;
   city: string;
+  lat: number;
+  lng: number;
 }
 
 export interface IUser {

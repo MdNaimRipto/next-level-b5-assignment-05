@@ -1,9 +1,9 @@
 import mongoose from "mongoose";
 import { Server } from "http";
 import app from "./app";
-import config from "./config/config";
+import { envConfig } from "./config/config";
 
-const port = config.port;
+const port = envConfig.port;
 
 process.on("uncaughtException", (error) => {
   console.error(error);
@@ -14,7 +14,7 @@ let server: Server;
 async function main() {
   try {
     // const uri = `mongodb://127.0.0.1:27017/travel-buddy`;
-    const uri = config.database_url;
+    const uri = envConfig.database_url;
     await mongoose.connect(`${uri}`);
     console.log(`🛢 Database Connected Successfully`);
 

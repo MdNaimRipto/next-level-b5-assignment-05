@@ -1,6 +1,5 @@
-export const verifyEmailTemplate = (name: string, token: string) => {
-  const verifyURL = `https://your-frontend-url.com/verify-email?token=${token}`;
-  const readmeLink = `https://github.com/your-username/your-repo-name#readme`;
+export const verifyEmailTemplate = (name: string, verifyURL: string) => {
+  const readmeLink = `https://github.com/MdNaimRipto/next-level-b5-assignment-05`;
 
   return `
     <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">

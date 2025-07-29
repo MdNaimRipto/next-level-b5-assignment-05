@@ -41,7 +41,7 @@ const userRegister = async (payload: IUser): Promise<null> => {
 
   const hashedPassword = await bcrypt.hash(
     payload.password,
-    envConfig.salt_round
+    Number(envConfig.salt_round)
   );
 
   const createdUser = await Users.create({
@@ -60,10 +60,10 @@ const userRegister = async (payload: IUser): Promise<null> => {
     },
   });
 
-  const verificationLink = `https://your-frontend.com/auth/verify?email=${email}&num=${createdUser.contactNumber}`;
+  const verificationLink = `http://localhost:3000/auth/verify?email=${email}&num=${createdUser.contactNumber}`;
   const htmlContent = verifyEmailTemplate(
-    verificationLink,
-    createdUser.userName
+    createdUser.userName,
+    verificationLink
   );
 
   await transporter.sendMail({
@@ -85,11 +85,15 @@ const verifyAccount = async (payload: IVerifyAccount): Promise<null> => {
     $and: [{ email: lowercaseEmail }, { contactNumber }],
   });
 
-  if (isExistsUser) {
+  if (!isExistsUser) {
     throw new ApiError(
-      httpStatus.CONFLICT,
+      httpStatus.NOT_FOUND,
       "Email or Contact Number Not found"
     );
+  }
+
+  if (isExistsUser.isVerified === true) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Account already verified");
   }
 
   await Users.findOneAndUpdate(
@@ -114,6 +118,22 @@ const userLogin = async (payload: ILoginUser): Promise<IAuthenticatedUser> => {
 
   if (!isExists) {
     throw new ApiError(httpStatus.UNAUTHORIZED, "Invalid Email Or Password");
+  }
+
+  const { isVerified, isBlocked } = isExists;
+
+  if (isBlocked) {
+    throw new ApiError(
+      httpStatus.UNAUTHORIZED,
+      "This account has been blocked by ADMIN and cannot be used anymore"
+    );
+  }
+
+  if (!isVerified) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "Your account is not verified yet. Please check email and verify your account"
+    );
   }
 
   const checkPassword = await bcrypt.compare(password, isExists.password);
@@ -163,9 +183,25 @@ const updateUser = async (
     throw new ApiError(httpStatus.NOT_FOUND, "User Not Found");
   }
 
-  const { role, password, location, ...updatePayload } = payload;
+  const {
+    isBlocked,
+    isVerified,
+    isApproved,
+    isActive,
+    role,
+    password,
+    location,
+    ...updatePayload
+  } = payload;
 
-  if (role !== undefined || password !== undefined) {
+  if (
+    role !== undefined ||
+    password !== undefined ||
+    isBlocked !== undefined ||
+    isActive !== undefined ||
+    isVerified !== undefined ||
+    isApproved !== undefined
+  ) {
     throw new ApiError(
       httpStatus.UNAUTHORIZED,
       "Permission Denied! Please Try Again."
@@ -173,6 +209,13 @@ const updateUser = async (
   }
 
   if (payload.email) {
+    if (!/^\S+@\S+\.\S+$/.test(payload.email)) {
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        "Please provide a valid email address"
+      );
+    }
+
     const isExists = await Users.findOne({ email: payload.email });
     if (isExists) {
       throw new ApiError(
@@ -184,6 +227,13 @@ const updateUser = async (
   }
 
   if (payload.contactNumber) {
+    if (!/^01[3-9]\d{8}$/.test(payload.contactNumber)) {
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        "Please provide a valid Bangladeshi phone number"
+      );
+    }
+
     const isExists = await Users.findOne({
       contactNumber: payload.contactNumber,
     });

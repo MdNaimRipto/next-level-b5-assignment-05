@@ -6,6 +6,8 @@ const locationSchema = new Schema<IUserLocation>(
   {
     city: { type: String, required: true, default: "Not Updated Yet!" },
     street: { type: String, required: true, default: "Not Updated Yet!" },
+    lat: { type: Number, required: true, default: 0 },
+    lng: { type: Number, required: true, default: 0 },
   },
   {
     _id: false,
