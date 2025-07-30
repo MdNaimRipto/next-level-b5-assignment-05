@@ -2,6 +2,16 @@ import { Request } from "express";
 import jwt, { JwtPayload, Secret, sign, SignOptions } from "jsonwebtoken";
 import ApiError from "../../errors/ApiError";
 import httpStatus from "http-status";
+import { userRoleEnums } from "../../app/modules/users/users.interface";
+import { Types } from "mongoose";
+
+export interface IJwtPayload {
+  email: string;
+  id: Types.ObjectId;
+  role: userRoleEnums;
+  iat: number;
+  exp: number;
+}
 
 const createToken = (
   payload: object,
@@ -13,8 +23,8 @@ const createToken = (
   } as SignOptions);
 };
 
-const jwtVerify = (token: string, secret: Secret): JwtPayload => {
-  return jwt.verify(token, secret) as JwtPayload;
+const jwtVerify = (token: string, secret: Secret): IJwtPayload => {
+  return jwt.verify(token, secret) as IJwtPayload;
 };
 
 const verifyAuthToken = (req: Request) => {

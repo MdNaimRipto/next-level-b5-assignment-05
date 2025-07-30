@@ -190,7 +190,6 @@ const updateUser = async (
     isActive,
     role,
     password,
-    location,
     ...updatePayload
   } = payload;
 
@@ -244,14 +243,6 @@ const updateUser = async (
       );
     }
     updatePayload.contactNumber = payload.contactNumber;
-  }
-
-  if (location && Object.keys(location).length > 0) {
-    Object.keys(location).map((key) => {
-      const locationsKey = `location.${key}`;
-      (updatePayload as any)[locationsKey] =
-        location[key as keyof typeof location];
-    });
   }
 
   await Users.findOneAndUpdate({ _id: userID }, updatePayload, {

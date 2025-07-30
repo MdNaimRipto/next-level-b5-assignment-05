@@ -1,19 +1,6 @@
 import { model, Schema } from "mongoose";
-import { IUser, IUserLocation } from "./users.interface";
+import { IUser } from "./users.interface";
 import { IsActiveEnums, UserRoleEnums } from "./user.constant";
-
-const locationSchema = new Schema<IUserLocation>(
-  {
-    city: { type: String, required: true, default: "Not Updated Yet!" },
-    street: { type: String, required: true, default: "Not Updated Yet!" },
-    lat: { type: Number, required: true, default: 0 },
-    lng: { type: Number, required: true, default: 0 },
-  },
-  {
-    _id: false,
-    timestamps: false,
-  }
-);
 
 export const usersSchema = new Schema<IUser>(
   {
@@ -36,7 +23,6 @@ export const usersSchema = new Schema<IUser>(
     },
     password: { type: String, required: true },
     role: { type: String, required: true, enum: UserRoleEnums },
-    location: locationSchema,
     isVerified: { type: Boolean, required: true, default: false },
     isActive: {
       type: String,
