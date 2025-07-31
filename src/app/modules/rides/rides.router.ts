@@ -14,6 +14,8 @@ router.post(
 );
 router.patch("/updateRide/:id", RidesController.updateRide);
 
+router.get("/viewMyRides", RidesController.viewEarningHistory);
+
 router.get("/viewEarningHistory/:id", RidesController.viewEarningHistory);
 
 export const RidesRouter = router;

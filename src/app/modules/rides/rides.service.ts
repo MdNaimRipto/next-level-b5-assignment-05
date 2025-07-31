@@ -155,6 +155,20 @@ const updateRide = async (
   return null;
 };
 
+const viewMyRides = async (token: string): Promise<IRides[]> => {
+  const { role, id } = jwtHelpers.jwtVerify(token, envConfig.jwt_access_secret);
+  let result: IRides[];
+  if (role === "rider") {
+    result = await Rides.find({ riderId: id });
+  } else if (role === "driver") {
+    result = await Rides.find({ driverId: id });
+  } else {
+    result = [];
+  }
+
+  return result;
+};
+
 const viewEarningHistory = async (
   token: string,
   driverId: string
@@ -194,5 +208,6 @@ export const RidesService = {
   getAllActiveRides,
   requestRide,
   updateRide,
+  viewMyRides,
   viewEarningHistory,
 };

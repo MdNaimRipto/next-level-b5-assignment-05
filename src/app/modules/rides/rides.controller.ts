@@ -47,6 +47,19 @@ const updateRide = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const viewMyRides = catchAsync(async (req: Request, res: Response) => {
+  const token = jwtHelpers.verifyAuthToken(req);
+
+  const result = await RidesService.viewMyRides(token);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "My Rides Retrieved",
+    data: result,
+  });
+});
+
 const viewEarningHistory = catchAsync(async (req: Request, res: Response) => {
   const token = jwtHelpers.verifyAuthToken(req);
   const { id } = req.params;
@@ -65,5 +78,6 @@ export const RidesController = {
   getAllActiveRides,
   requestRide,
   updateRide,
+  viewMyRides,
   viewEarningHistory,
 };
