@@ -2,6 +2,7 @@ import httpStatus from "http-status";
 import {
   IAuthenticatedUser,
   ILoginUser,
+  isActiveEnums,
   IUpdatePassword,
   IUser,
   IVerifyAccount,
@@ -307,10 +308,36 @@ const updatePassword = async (
   return null;
 };
 
+// * Update Active status
+const updateActiveStatus = async (
+  token: string,
+  isActive: isActiveEnums
+): Promise<null> => {
+  const { email, id } = jwtHelpers.jwtVerify(
+    token,
+    envConfig.jwt_access_secret
+  );
+
+  const isExistsUser = await Users.findOne({ $and: [{ email }, { _id: id }] });
+  if (!isExistsUser) {
+    throw new ApiError(httpStatus.NOT_FOUND, "User Not Found");
+  }
+
+  await Users.findOneAndUpdate(
+    { $and: [{ email }, { _id: id }] },
+    {
+      isActive: isActive,
+    }
+  );
+
+  return null;
+};
+
 export const UserService = {
   userRegister,
   verifyAccount,
   userLogin,
   updateUser,
   updatePassword,
+  updateActiveStatus,
 };

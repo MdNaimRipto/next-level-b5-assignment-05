@@ -31,4 +31,6 @@ router.patch(
   UserController.updatePassword
 );
 
+router.patch("/updateActiveStatus", UserController.updateActiveStatus);
+
 export const UserRouter = router;

@@ -78,10 +78,26 @@ const updatePassword = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+// Update Active Status
+const updateActiveStatus = catchAsync(async (req: Request, res: Response) => {
+  const { ...payload } = req.body;
+  const token = jwtHelpers.verifyAuthToken(req);
+
+  const result = await UserService.updateActiveStatus(token, payload);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Active Status Updated Successfully",
+    data: result,
+  });
+});
+
 export const UserController = {
   userRegister,
   verifyAccount,
   userLogin,
   updatedUser,
   updatePassword,
+  updateActiveStatus,
 };
