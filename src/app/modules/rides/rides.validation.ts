@@ -9,21 +9,11 @@ const ridesZodSchema = z.object({
       required_error: "Driver ID is required",
     }),
     location: z.object({
-      from: z.object({
-        lat: z.number({
-          required_error: "From latitude is required",
-        }),
-        lng: z.number({
-          required_error: "From longitude is required",
-        }),
+      from: z.string({
+        required_error: "From is required",
       }),
-      to: z.object({
-        lat: z.number({
-          required_error: "To latitude is required",
-        }),
-        lng: z.number({
-          required_error: "To longitude is required",
-        }),
+      to: z.string({
+        required_error: "To ID is required",
       }),
     }),
     fair: z.number({
