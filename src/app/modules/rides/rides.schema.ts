@@ -9,12 +9,12 @@ const ridesSchema = new Schema({
   riderId: {
     type: Types.ObjectId,
     required: true,
-    ref: "Users", // or Rider model
+    ref: "Users",
   },
   driverId: {
     type: Types.ObjectId,
     required: true,
-    ref: "Users", // or User if it's a single collection
+    ref: "Users",
   },
   acceptStatus: {
     type: String,
@@ -29,14 +29,8 @@ const ridesSchema = new Schema({
     default: "pending",
   },
   location: {
-    from: {
-      lat: { type: Number, required: true },
-      lng: { type: Number, required: true },
-    },
-    to: {
-      lat: { type: Number, required: true },
-      lng: { type: Number, required: true },
-    },
+    from: { type: String, require: true },
+    to: { type: String, require: true },
   },
   fair: {
     type: Number,

@@ -14,8 +14,8 @@ export interface IRides {
   acceptStatus: acceptStatusEnums;
   rideStatus: rideStatusEnums;
   location: {
-    from: { lat: number; lng: number };
-    to: { lat: number; lng: number };
+    from: string;
+    to: string;
   };
   fair: number;
   cancelledBy?: canceledByEnum;
