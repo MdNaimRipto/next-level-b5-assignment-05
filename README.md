@@ -6,11 +6,13 @@
 
 - https://github.com/MdNaimRipto/next-level-b5-assignment-05
 
-# Live link: N/A
+# Live link:
 
-# Project
+- https://assignment-05-backend-hazel.vercel.app
 
-- pattern: MVC Pattern
+# Project pattern:
+
+- MVC Pattern
 
 # Technologies:
 
@@ -103,7 +105,7 @@
     - curl:
 
     ```
-    curl --location 'http://localhost:5000/v1.0.0/apis/users/register' \
+    curl --location 'https://assignment-05-backend-hazel.vercel.app/v1.0.0/apis/users/register' \
     --header 'Content-Type: application/json' \
     --data-raw '{
     "userName": "MD Naimur Rahman",
@@ -120,7 +122,7 @@
     - curl:
 
     ```
-    curl --location --request PATCH 'http://localhost:5000/v1.0.0/apis/users/verifyAccount' \
+    curl --location --request PATCH 'https://assignment-05-backend-hazel.vercel.app/v1.0.0/apis/users/verifyAccount' \
     --header 'Content-Type: application/json' \
     --data-raw '{
     "email": "naimurtsc567@gmail.com",
@@ -134,7 +136,7 @@
     - curl:
 
     ```
-    curl --location 'http://localhost:5000/v1.0.0/apis/users/login' \
+    curl --location 'https://assignment-05-backend-hazel.vercel.app/v1.0.0/apis/users/login' \
     --header 'Content-Type: application/json' \
     --data-raw '{
     "email": "naimurtsc567@gmail.com",
@@ -148,7 +150,7 @@
     - curl:
 
     ```
-    curl --location --request PATCH 'http://localhost:5000/v1.0.0/apis/users/updateUser/6888db743647c4576481bc52' \
+    curl --location --request PATCH 'https://assignment-05-backend-hazel.vercel.app/v1.0.0/apis/users/updateUser/6888db743647c4576481bc52' \
     --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im5haW11cnRzYzU2N0BnbWFpbC5jb20iLCJpZCI6IjY4ODhkYjc0MzY0N2M0NTc2NDgxYmM1MiIsInJvbGUiOiJyaWRlciIsImlhdCI6MTc1MzgwMDE5OCwiZXhwIjoxNzUzODg2NTk4fQ.ECNEZJkgkc7HPmrzcliFVHGvQ1H7AgmbyUH5UkmuXuA' \
     --header 'Content-Type: application/json' \
     --data '{
@@ -162,7 +164,7 @@
     - curl:
 
     ```
-    curl --location --request PATCH 'http://localhost:5000/v1.0.0/apis/users/updatePassword' \
+    curl --location --request PATCH 'https://assignment-05-backend-hazel.vercel.app/v1.0.0/apis/users/updatePassword' \
     --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im5haW11cnRzYzU2N0BnbWFpbC5jb20iLCJpZCI6IjY4ODhkYjc0MzY0N2M0NTc2NDgxYmM1MiIsInJvbGUiOiJyaWRlciIsImlhdCI6MTc1MzgwMDE5OCwiZXhwIjoxNzUzODg2NTk4fQ.ECNEZJkgkc7HPmrzcliFVHGvQ1H7AgmbyUH5UkmuXuA' \
     --header 'Content-Type: application/json' \
     --data-raw '{
@@ -179,7 +181,7 @@
     - curl:
 
     ```
-    curl --location --request PATCH 'http://localhost:5000/v1.0.0/apis/users/updateActiveStatus' \
+    curl --location --request PATCH 'https://assignment-05-backend-hazel.vercel.app/v1.0.0/apis/users/updateActiveStatus' \
     --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im5haW11cnRzYzU2N0BnbWFpbC5jb20iLCJpZCI6IjY4ODhkYjc0MzY0N2M0NTc2NDgxYmM1MiIsInJvbGUiOiJyaWRlciIsImlhdCI6MTc1NDA1MTYwMywiZXhwIjoxNzU0MTM4MDAzfQ.eGF7qWt3dVqBmp7VB3E7aksWgriSiReJnAocvxC8JOU' \
     --header 'Content-Type: application/json' \
     --data '{
@@ -194,7 +196,7 @@
     - curl:
 
     ```
-    curl --location --request GET 'http://localhost:5000/v1.0.0/apis/rides/activeRides'
+    curl --location --request GET 'https://assignment-05-backend-hazel.vercel.app/v1.0.0/apis/rides/activeRides'
 
     ```
 
@@ -203,7 +205,7 @@
     - curl:
 
     ```
-    curl --location 'http://localhost:5000/v1.0.0/apis/rides/requestRide' \
+    curl --location 'https://assignment-05-backend-hazel.vercel.app/v1.0.0/apis/rides/requestRide' \
     --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im5haW11cnRzYzU2N0BnbWFpbC5jb20iLCJpZCI6IjY4ODhkYjc0MzY0N2M0NTc2NDgxYmM1MiIsInJvbGUiOiJyaWRlciIsImlhdCI6MTc1NDA1MTYwMywiZXhwIjoxNzU0MTM4MDAzfQ.eGF7qWt3dVqBmp7VB3E7aksWgriSiReJnAocvxC8JOU' \
     --header 'Content-Type: application/json' \
     --data '{
@@ -227,7 +229,7 @@
     - curl:
 
     ```
-    curl --location --request PATCH 'http://localhost:5000/v1.0.0/apis/rides/updateRide/688cc0f324eddfc304f9ba2a' \
+    curl --location --request PATCH 'https://assignment-05-backend-hazel.vercel.app/v1.0.0/apis/rides/updateRide/688cc0f324eddfc304f9ba2a' \
     --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im1kbmFpbXVycmFobWFuNjgxQGdtYWlsLmNvbSIsImlkIjoiNjg4Y2JmNTU4MjA1NWM0MTQyMDZiNGEyIiwicm9sZSI6ImRyaXZlciIsImlhdCI6MTc1NDA1NTM2OSwiZXhwIjoxNzU0MTQxNzY5fQ.8WYRN9CN3qNVSno4Z-a1vSWiCToW1H8IGs9laUUvWhw' \
     --header 'Content-Type: application/json' \
     --data '{
@@ -241,7 +243,7 @@
     - curl:
 
     ```
-    curl --location --request GET 'http://localhost:5000/v1.0.0/apis/rides/viewMyRides' \
+    curl --location --request GET 'https://assignment-05-backend-hazel.vercel.app/v1.0.0/apis/rides/viewMyRides' \
     --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im1kbmFpbXVycmFobWFuNjgxQGdtYWlsLmNvbSIsImlkIjoiNjg4Y2JmNTU4MjA1NWM0MTQyMDZiNGEyIiwicm9sZSI6ImRyaXZlciIsImlhdCI6MTc1NDA1NTM2OSwiZXhwIjoxNzU0MTQxNzY5fQ.8WYRN9CN3qNVSno4Z-a1vSWiCToW1H8IGs9laUUvWhw'
 
     ```
@@ -251,7 +253,7 @@
     - curl:
 
   ```
-  curl --location --request GET 'http://localhost:5000/v1.0.0/apis/rides/viewEarningHistory/688cbf5582055c414206b4a2' \
+  curl --location --request GET 'https://assignment-05-backend-hazel.vercel.app/v1.0.0/apis/rides/viewEarningHistory/688cbf5582055c414206b4a2' \
   --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im1kbmFpbXVycmFobWFuNjgxQGdtYWlsLmNvbSIsImlkIjoiNjg4Y2JmNTU4MjA1NWM0MTQyMDZiNGEyIiwicm9sZSI6ImRyaXZlciIsImlhdCI6MTc1NDA1NTM2OSwiZXhwIjoxNzU0MTQxNzY5fQ.8WYRN9CN3qNVSno4Z-a1vSWiCToW1H8IGs9laUUvWhw'
   ```
 
@@ -264,7 +266,7 @@
     role(optional): rider | driver
 
     ```
-    curl --location 'http://localhost:5000/v1.0.0/apis/admin/getAllUsers?role=driver' \
+    curl --location 'https://assignment-05-backend-hazel.vercel.app/v1.0.0/apis/admin/getAllUsers?role=driver' \
     --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluMDBAZ21haWwuY29tIiwiaWQiOiI2ODhjYzcyMDQ5MTI4NmJjODBlMWVhZDQiLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3NTQwNTY3MDAsImV4cCI6MTc1NDE0MzEwMH0.MSRcOkwB9yMA-PmhrNuFW1TchiWVZH_5AyuijJJJWt0 '
 
     ```
@@ -274,7 +276,7 @@
     - curl:
 
     ```
-    curl --location 'http://localhost:5000/v1.0.0/apis/admin/getAllRides' \
+    curl --location 'https://assignment-05-backend-hazel.vercel.app/v1.0.0/apis/admin/getAllRides' \
     --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluMDBAZ21haWwuY29tIiwiaWQiOiI2ODhjYzcyMDQ5MTI4NmJjODBlMWVhZDQiLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3NTQwNTY3MDAsImV4cCI6MTc1NDE0MzEwMH0.MSRcOkwB9yMA-PmhrNuFW1TchiWVZH_5AyuijJJJWt0 '
 
     ```
@@ -284,7 +286,7 @@
     - curl:
 
     ```
-    curl --location --request PATCH 'http://localhost:5000/v1.0.0/apis/admin/updateApproveStatus/688cbf5582055c414206b4a2' \
+    curl --location --request PATCH 'https://assignment-05-backend-hazel.vercel.app/v1.0.0/apis/admin/updateApproveStatus/688cbf5582055c414206b4a2' \
     --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluMDBAZ21haWwuY29tIiwiaWQiOiI2ODhjYzcyMDQ5MTI4NmJjODBlMWVhZDQiLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3NTQwNTY3MDAsImV4cCI6MTc1NDE0MzEwMH0.MSRcOkwB9yMA-PmhrNuFW1TchiWVZH_5AyuijJJJWt0'
 
     ```
@@ -294,6 +296,6 @@
     - curl:
 
     ```
-    curl --location --request PATCH 'http://localhost:5000/v1.0.0/apis/admin/updateBlockStatus/688cbf5582055c414206b4a2' \
+    curl --location --request PATCH 'https://assignment-05-backend-hazel.vercel.app/v1.0.0/apis/admin/updateBlockStatus/688cbf5582055c414206b4a2' \
     --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluMDBAZ21haWwuY29tIiwiaWQiOiI2ODhjYzcyMDQ5MTI4NmJjODBlMWVhZDQiLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3NTQwNTY3MDAsImV4cCI6MTc1NDE0MzEwMH0.MSRcOkwB9yMA-PmhrNuFW1TchiWVZH_5AyuijJJJWt0'
     ```
