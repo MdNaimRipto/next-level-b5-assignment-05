@@ -44,11 +44,9 @@
 
   - /users/register
 
-        - curl:
+    - curl:
 
-        ```bash
-
-    curl --location 'http://localhost:5000/v1.0.0/apis/v1.0.0/apis/users/register' \
+    ```curl --location 'http://localhost:5000/v1.0.0/apis/v1.0.0/apis/users/register' \
     --header 'Content-Type: application/json' \
     --data-raw '{
     "userName": "MD Naimur Rahman",
@@ -57,6 +55,8 @@
     "password": "123456",
     "role": "rider"
     }'
+
+    ```
 
   - /users/verifyAccount
 
