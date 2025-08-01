@@ -1,44 +1,62 @@
-# Project Name: Ride management system
+# Project Name:
 
-# Github: https://github.com/MdNaimRipto/next-level-b5-assignment-05
+- Ride management system
+
+# Github:
+
+- https://github.com/MdNaimRipto/next-level-b5-assignment-05
 
 # Live link: N/A
 
-# Project pattern: MVC Pattern
+# Project
+
+- pattern: MVC Pattern
 
 # Technologies:
 
-    * Node.js
+- Node.js
 
-    * Express
+- Express
 
-    * Mongoose
+- Mongoose
 
-    * Cors
+- Cors
 
-    * Dotenv
+- Dotenv
 
-    * Bcrypt
+- Bcrypt
 
-    * Zod
+- Zod
 
-    * Express-session
+- Express-session
 
-    * http-status
+- http-status
 
-    * Jsonwebtoken
+- Jsonwebtoken
 
-    * Nodemailer
+- Nodemailer
 
-    * ts-node-dev
+- ts-node-dev
 
-# End points & sample payload: /rides /admin
+# End points & sample payload:
 
 - User:
 
   - /users/register
 
-    - curl:
+        - curl:
+
+        ```bash
+
+    curl --location 'http://localhost:5000/v1.0.0/apis/v1.0.0/apis/users/register' \
+    --header 'Content-Type: application/json' \
+    --data-raw '{
+    "userName": "MD Naimur Rahman",
+    "email": "naimurtsc567@gmail.com",
+    "contactNumber": "01632970990",
+    "password": "123456",
+    "role": "rider"
+    }'
 
   - /users/verifyAccount
 
@@ -57,5 +75,45 @@
     - curl:
 
   - /users/updateActiveStatus
+
+    - curl:
+
+- Rides:
+
+  - /rides/activeRides
+
+    - curl:
+
+  - /rides/requestRide
+
+    - curl:
+
+  - /rides/updateRide
+
+    - curl:
+
+  - /rides/viewMyRides
+
+    - curl:
+
+  - /rides/viewEarningHistory
+
+    - curl:
+
+- Admin:
+
+  - /admin/getAllUsers
+
+    - curl:
+
+  - /admin/getAllRides
+
+    - curl:
+
+  - /admin/updateApproveStatus
+
+    - curl:
+
+  - /admin/updateBlockStatus
 
     - curl:
