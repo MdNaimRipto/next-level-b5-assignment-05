@@ -73,6 +73,9 @@ const updateRide = async (
   payload: Partial<IUpdateRideStatus>
 ): Promise<null> => {
   const { role } = jwtHelpers.jwtVerify(token, envConfig.jwt_access_secret);
+
+  console.log({ role });
+
   const { acceptStatus, rideStatus } = payload;
 
   const isRideExists = await Rides.findOne({ _id: rideId });
@@ -80,8 +83,15 @@ const updateRide = async (
     throw new ApiError(httpStatus.NOT_FOUND, "Ride Not found");
   }
 
-  if (isRideExists.rideStatus === "completed") {
-    throw new ApiError(httpStatus.BAD_REQUEST, "Cannot update completed rides");
+  if (
+    (isRideExists.rideStatus === "completed" ||
+      isRideExists.rideStatus === "inTransit") &&
+    rideStatus === "cancelled"
+  ) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "Cannot cancel completed Or Ongoing rides"
+    );
   }
 
   if (
@@ -94,7 +104,7 @@ const updateRide = async (
     );
   }
 
-  if (isRideExists.acceptStatus === "accepted") {
+  if (isRideExists.acceptStatus === "accepted" && acceptStatus === "rejected") {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
       "This Ride already has been accepted and cannot change the status"

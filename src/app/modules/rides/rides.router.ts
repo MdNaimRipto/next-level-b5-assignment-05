@@ -10,11 +10,11 @@ router.get("/activeRides", RidesController.getAllActiveRides);
 router.post(
   "/requestRide",
   zodValidationRequest(RidesValidation.ridesZodSchema),
-  RidesController.getAllActiveRides
+  RidesController.requestRide
 );
 router.patch("/updateRide/:id", RidesController.updateRide);
 
-router.get("/viewMyRides", RidesController.viewEarningHistory);
+router.get("/viewMyRides", RidesController.viewMyRides);
 
 router.get("/viewEarningHistory/:id", RidesController.viewEarningHistory);
 

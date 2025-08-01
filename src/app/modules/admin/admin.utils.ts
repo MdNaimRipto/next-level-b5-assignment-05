@@ -8,7 +8,7 @@ export const checkIsAdmin = (token: string) => {
   if (role !== "admin") {
     throw new ApiError(
       httpStatus.UNAUTHORIZED,
-      "Permission Denied. Only Admin Can Access This"
+      "Permission Denied. Only Admin Can Access This API"
     );
   }
 };
