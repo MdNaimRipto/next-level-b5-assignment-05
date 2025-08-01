@@ -80,10 +80,10 @@ const updatePassword = catchAsync(async (req: Request, res: Response) => {
 
 // Update Active Status
 const updateActiveStatus = catchAsync(async (req: Request, res: Response) => {
-  const { ...payload } = req.body;
+  const { status } = req.body;
   const token = jwtHelpers.verifyAuthToken(req);
 
-  const result = await UserService.updateActiveStatus(token, payload);
+  const result = await UserService.updateActiveStatus(token, status);
 
   sendResponse(res, {
     success: true,
