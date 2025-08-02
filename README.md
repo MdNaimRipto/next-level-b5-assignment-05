@@ -96,6 +96,12 @@
 
 5. Open Postman or any api testing applications to test the apis.
 
+# Admin Credentials:
+
+- email: admin00@gmail.com
+
+- password: admin00
+
 # End points & sample payload:
 
 - User:
