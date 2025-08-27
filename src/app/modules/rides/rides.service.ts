@@ -1,6 +1,11 @@
 import ApiError from "../../../errors/ApiError";
 import { Users } from "../users/users.schema";
-import { IRides, IUpdateRideStatus } from "./rides.interface";
+import {
+  acceptStatusEnums,
+  IRides,
+  IUpdateRideStatus,
+  rideStatusEnums,
+} from "./rides.interface";
 import httpStatus from "http-status";
 import { Rides } from "./rides.schema";
 import { IUser } from "../users/users.interface";
@@ -9,13 +14,8 @@ import { jwtHelpers } from "../../../util/jwt/jwt.utils";
 
 const getAllActiveRides = async (): Promise<IUser[]> => {
   const result = await Users.find({
-    $and: [
-      { role: "driver" },
-      { isActive: "active" },
-      { isApproved: true },
-      { isBlocked: false },
-    ],
-  }).select("_id userName email contactNumber");
+    $and: [{ role: "driver" }, { isApproved: true }, { isBlocked: false }],
+  }).select("_id userName email contactNumber isActive");
 
   return result;
 };
@@ -67,101 +67,97 @@ const requestRide = async (token: string, payload: IRides): Promise<null> => {
   return null;
 };
 
-const updateRide = async (
+const updateRideAcceptStatus = async (
   token: string,
   rideId: string,
-  payload: Partial<IUpdateRideStatus>
+  acceptStatus: acceptStatusEnums
 ): Promise<null> => {
   const { role } = jwtHelpers.jwtVerify(token, envConfig.jwt_access_secret);
 
-  console.log({ role });
-
-  const { acceptStatus, rideStatus } = payload;
-
-  const isRideExists = await Rides.findOne({ _id: rideId });
-  if (!isRideExists) {
-    throw new ApiError(httpStatus.NOT_FOUND, "Ride Not found");
+  if (role !== "driver") {
+    throw new ApiError(
+      httpStatus.FORBIDDEN,
+      "Only driver can update accept status"
+    );
   }
 
+  const ride = await Rides.findOne({ _id: rideId });
+  if (!ride) throw new ApiError(httpStatus.NOT_FOUND, "Ride not found");
+
+  if (ride.acceptStatus === "rejected" || ride.rideStatus === "cancelled") {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "Cannot update rejected or cancelled rides"
+    );
+  }
+
+  if (ride.acceptStatus === "accepted" && acceptStatus === "rejected") {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "This ride has already been accepted and cannot be rejected"
+    );
+  }
+
+  // ✅ Update
+  if (acceptStatus === "rejected") {
+    ride.acceptStatus = "rejected";
+    ride.cancelledBy = "driver";
+  } else if (acceptStatus === "accepted") {
+    ride.acceptStatus = "accepted";
+  }
+
+  await Rides.findOneAndUpdate({ _id: rideId }, ride);
+  return null;
+};
+
+const updateRideStatus = async (
+  token: string,
+  rideId: string,
+  rideStatus: rideStatusEnums
+): Promise<null> => {
+  const { role } = jwtHelpers.jwtVerify(token, envConfig.jwt_access_secret);
+
+  const ride = await Rides.findOne({ _id: rideId });
+  if (!ride) throw new ApiError(httpStatus.NOT_FOUND, "Ride not found");
+
+  if (ride.acceptStatus === "rejected" || ride.rideStatus === "cancelled") {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "Cannot update rejected or cancelled rides"
+    );
+  }
+
+  // 🚫 Cancel rules
   if (
-    (isRideExists.rideStatus === "completed" ||
-      isRideExists.rideStatus === "inTransit") &&
+    (ride.rideStatus === "completed" || ride.rideStatus === "inTransit") &&
     rideStatus === "cancelled"
   ) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
-      "Cannot cancel completed Or Ongoing rides"
+      "Cannot cancel completed or ongoing rides"
     );
   }
 
-  if (
-    isRideExists.acceptStatus === "rejected" ||
-    isRideExists.rideStatus === "cancelled"
-  ) {
-    throw new ApiError(
-      httpStatus.BAD_REQUEST,
-      "Cannot update rejected or canceled rides"
-    );
-  }
-
-  if (isRideExists.acceptStatus === "accepted" && acceptStatus === "rejected") {
-    throw new ApiError(
-      httpStatus.BAD_REQUEST,
-      "This Ride already has been accepted and cannot change the status"
-    );
-  }
-
-  if (acceptStatus) {
-    if (acceptStatus === "rejected") {
+  if (rideStatus === "cancelled") {
+    if (role !== "driver") {
+      throw new ApiError(httpStatus.FORBIDDEN, "Only driver can cancel rides");
+    }
+    ride.rideStatus = "cancelled";
+    ride.cancelledBy = "driver";
+  } else {
+    // pending → inTransit → completed
+    if (rideStatus === "inTransit" || rideStatus === "completed") {
       if (role !== "driver") {
         throw new ApiError(
-          httpStatus.BAD_REQUEST,
-          "Only Driver Can Reject Rides"
+          httpStatus.FORBIDDEN,
+          "Only driver can update ride to ongoing or completed"
         );
       }
-
-      isRideExists.acceptStatus = acceptStatus;
-      isRideExists.cancelledBy = "driver";
     }
-
-    if (acceptStatus === "accepted") {
-      if (role !== "driver") {
-        throw new ApiError(
-          httpStatus.BAD_REQUEST,
-          "Only Driver Can Accept Rides"
-        );
-      }
-      isRideExists.acceptStatus = acceptStatus;
-    }
+    ride.rideStatus = rideStatus;
   }
 
-  if (rideStatus) {
-    if (rideStatus === "cancelled") {
-      isRideExists.rideStatus = rideStatus;
-      if (role === "driver") {
-        isRideExists.cancelledBy = "driver";
-      }
-
-      if (role === "rider") {
-        isRideExists.cancelledBy = "rider";
-      }
-    }
-
-    if (rideStatus && rideStatus !== "cancelled") {
-      if (rideStatus === "inTransit" || rideStatus === "completed") {
-        if (role !== "driver") {
-          throw new ApiError(
-            httpStatus.BAD_REQUEST,
-            "Only driver can update ride to ongoing or completed"
-          );
-        }
-      }
-      isRideExists.rideStatus = rideStatus;
-    }
-  }
-
-  await Rides.findOneAndUpdate({ _id: rideId }, isRideExists);
-
+  await Rides.findOneAndUpdate({ _id: rideId }, ride);
   return null;
 };
 
@@ -169,9 +165,19 @@ const viewMyRides = async (token: string): Promise<IRides[]> => {
   const { role, id } = jwtHelpers.jwtVerify(token, envConfig.jwt_access_secret);
   let result: IRides[];
   if (role === "rider") {
-    result = await Rides.find({ riderId: id });
+    result = await Rides.find({ riderId: id }).populate([
+      {
+        path: "driverId",
+        select: "userName _id",
+      },
+    ]);
   } else if (role === "driver") {
-    result = await Rides.find({ driverId: id });
+    result = await Rides.find({ driverId: id }).populate([
+      {
+        path: "riderId",
+        select: "userName _id",
+      },
+    ]);
   } else {
     result = [];
   }
@@ -217,7 +223,8 @@ const viewEarningHistory = async (
 export const RidesService = {
   getAllActiveRides,
   requestRide,
-  updateRide,
+  updateRideAcceptStatus,
+  updateRideStatus,
   viewMyRides,
   viewEarningHistory,
 };

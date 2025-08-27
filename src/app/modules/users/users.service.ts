@@ -15,6 +15,8 @@ import { envConfig } from "../../../config/config";
 import { verifyEmailTemplate } from "../../../util/templates/verifyEmailTemplate";
 import { jwtHelpers } from "../../../util/jwt/jwt.utils";
 import { Secret } from "jsonwebtoken";
+import { Response } from "express";
+import { createNewAccessTokenWithRefreshToken } from "./user.utils";
 
 //* User Register
 const userRegister = async (payload: IUser): Promise<null> => {
@@ -61,7 +63,19 @@ const userRegister = async (payload: IUser): Promise<null> => {
     },
   });
 
-  const verificationLink = `http://localhost:3000/auth/verify?email=${email}&num=${createdUser.contactNumber}`;
+  const jwtPayload = {
+    email: createdUser.email,
+    id: createdUser._id,
+    role: createdUser.role,
+  };
+
+  const token = jwtHelpers.createToken(
+    jwtPayload,
+    envConfig.jwt_access_secret,
+    envConfig.jwt_access_expires_in
+  );
+
+  const verificationLink = `${envConfig.FRONTEND_URL}/auth/verify?token=${token}`;
   const htmlContent = verifyEmailTemplate(
     createdUser.userName,
     verificationLink
@@ -77,13 +91,16 @@ const userRegister = async (payload: IUser): Promise<null> => {
 };
 
 // * Verify Account
-const verifyAccount = async (payload: IVerifyAccount): Promise<null> => {
-  const { email, contactNumber } = payload;
+const verifyAccount = async (token: string): Promise<IAuthenticatedUser> => {
+  const { id, email } = jwtHelpers.jwtVerify(
+    token,
+    envConfig.jwt_access_secret
+  );
 
   const lowercaseEmail = email.toLocaleLowerCase();
 
   const isExistsUser = await Users.findOne({
-    $and: [{ email: lowercaseEmail }, { contactNumber }],
+    $and: [{ email: lowercaseEmail }, { _id: id }],
   });
 
   if (!isExistsUser) {
@@ -99,7 +116,7 @@ const verifyAccount = async (payload: IVerifyAccount): Promise<null> => {
 
   await Users.findOneAndUpdate(
     {
-      $and: [{ email: lowercaseEmail }, { contactNumber }],
+      $and: [{ email: lowercaseEmail }, { _id: id }],
     },
     {
       isActive: "active",
@@ -108,7 +125,28 @@ const verifyAccount = async (payload: IVerifyAccount): Promise<null> => {
     }
   );
 
-  return null;
+  const jwtPayload = {
+    email: isExistsUser.email,
+    id: isExistsUser._id,
+    role: isExistsUser.role,
+  };
+
+  const accessToken = jwtHelpers.createToken(
+    jwtPayload,
+    envConfig.jwt_access_secret,
+    envConfig.jwt_access_expires_in
+  );
+
+  const refreshToken = jwtHelpers.createToken(
+    jwtPayload,
+    envConfig.jwt_refresh_secret,
+    envConfig.jwt_refresh_expires_in
+  );
+
+  return {
+    accessToken,
+    refreshToken,
+  };
 };
 
 //* User Login
@@ -161,13 +199,48 @@ const userLogin = async (payload: ILoginUser): Promise<IAuthenticatedUser> => {
     envConfig.jwt_refresh_expires_in
   );
 
-  const userData = isExists.toObject() as any;
-  delete userData.password;
-
   return {
     accessToken,
     refreshToken,
-    userData,
+  };
+};
+
+const getAuthenticatedUserDetails = async (
+  accessToken: string
+): Promise<IUser | null> => {
+  const { id, email } = jwtHelpers.jwtVerify(
+    accessToken,
+    envConfig.jwt_access_secret
+  );
+  const result = await Users.findOne({
+    _id: id,
+    email: email.toLocaleUpperCase(),
+  }).select("-password");
+  return result;
+};
+
+const logout = async (res: Response): Promise<null> => {
+  res.clearCookie("accessToken", {
+    httpOnly: true,
+    secure: false,
+    sameSite: "lax",
+  });
+  res.clearCookie("refreshToken", {
+    httpOnly: true,
+    secure: false,
+    sameSite: "lax",
+  });
+
+  return null;
+};
+
+const getNewAccessToken = async (refreshToken: string) => {
+  const newAccessToken = await createNewAccessTokenWithRefreshToken(
+    refreshToken
+  );
+
+  return {
+    accessToken: newAccessToken,
   };
 };
 
@@ -337,6 +410,9 @@ export const UserService = {
   userRegister,
   verifyAccount,
   userLogin,
+  getAuthenticatedUserDetails,
+  logout,
+  getNewAccessToken,
   updateUser,
   updatePassword,
   updateActiveStatus,

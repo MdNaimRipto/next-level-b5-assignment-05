@@ -14,4 +14,6 @@ export const envConfig = {
   jwt_refresh_expires_in: process.env.JWT_REFRESH_EXPIRES_IN as string,
   nodemailer_user: process.env.NODEMAILER_USER as string,
   nodemailer_pass: process.env.NODEMAILER_PASS as string,
+  FRONTEND_URL: process.env.FRONTEND_URL as string,
+  EXPRESS_SESSION_SECRET: process.env.EXPRESS_SESSION_SECRET as string,
 };

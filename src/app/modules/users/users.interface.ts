@@ -26,7 +26,6 @@ export interface ILoginUser {
 export interface IAuthenticatedUser {
   accessToken: string;
   refreshToken: string;
-  userData: Omit<IUser, "password">;
 }
 
 export interface IUpdatePassword {

@@ -4,13 +4,29 @@ import httpStatus from "http-status";
 import globalErrorHandler from "./middlewares/globalErrorHandler";
 import pathNotFoundErrorHandler from "./errors/pathNotFoundErrorHandler";
 import { Routers } from "./app/routes/router";
+import { envConfig } from "./config/config";
+import expressSession from "express-session";
+import cookieParser from "cookie-parser";
 
 const app: Application = express();
 
 // ? Middlewares:
-app.use(cors());
+app.use(
+  expressSession({
+    secret: envConfig.EXPRESS_SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+  })
+);
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(
+  cors({
+    origin: envConfig.FRONTEND_URL,
+    credentials: true,
+  })
+);
 
 // * Basic Page
 app.get("/", async (req: Request, res: Response) => {

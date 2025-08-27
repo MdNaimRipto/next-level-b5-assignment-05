@@ -19,6 +19,7 @@ const getAllActiveRides = catchAsync(async (req: Request, res: Response) => {
 
 const requestRide = catchAsync(async (req: Request, res: Response) => {
   const token = jwtHelpers.verifyAuthToken(req);
+  console.log({ token });
 
   const { ...payload } = req.body;
 
@@ -32,12 +33,33 @@ const requestRide = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const updateRide = catchAsync(async (req: Request, res: Response) => {
+const updateRideAcceptStatus = catchAsync(
+  async (req: Request, res: Response) => {
+    const token = jwtHelpers.verifyAuthToken(req);
+    const { id } = req.params;
+    const { ...payload } = req.body;
+
+    const result = await RidesService.updateRideAcceptStatus(
+      token,
+      id,
+      payload
+    );
+
+    sendResponse(res, {
+      success: true,
+      statusCode: httpStatus.OK,
+      message: "Ride Updated Successfully",
+      data: result,
+    });
+  }
+);
+
+const updateRideStatus = catchAsync(async (req: Request, res: Response) => {
   const token = jwtHelpers.verifyAuthToken(req);
   const { id } = req.params;
   const { ...payload } = req.body;
 
-  const result = await RidesService.updateRide(token, id, payload);
+  const result = await RidesService.updateRideStatus(token, id, payload);
 
   sendResponse(res, {
     success: true,
@@ -77,7 +99,8 @@ const viewEarningHistory = catchAsync(async (req: Request, res: Response) => {
 export const RidesController = {
   getAllActiveRides,
   requestRide,
-  updateRide,
+  updateRideAcceptStatus,
+  updateRideStatus,
   viewMyRides,
   viewEarningHistory,
 };

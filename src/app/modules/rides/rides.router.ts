@@ -2,8 +2,8 @@ import express from "express";
 import zodValidationRequest from "../../../middlewares/zodValidationRequest";
 import { RidesController } from "./rides.controller";
 import { RidesValidation } from "./rides.validation";
-import { UserRoleEnums } from "../users/user.constant";
-import { checkAuth } from "../../../middlewares/checkAuth";
+// import { UserRoleEnums } from "../users/user.constant";
+// import { checkAuth } from "../../../middlewares/checkAuth";
 
 const router = express.Router();
 
@@ -12,24 +12,30 @@ router.get("/activeRides", RidesController.getAllActiveRides);
 router.post(
   "/requestRide",
   zodValidationRequest(RidesValidation.ridesZodSchema),
-  checkAuth(...UserRoleEnums),
+  // checkAuth(...UserRoleEnums),
   RidesController.requestRide
 );
 router.patch(
-  "/updateRide/:id",
-  checkAuth(...UserRoleEnums),
-  RidesController.updateRide
+  "/updateRideAcceptStatus/:id",
+  // checkAuth(...UserRoleEnums),
+  RidesController.updateRideAcceptStatus
+);
+
+router.patch(
+  "/updateRideStatus/:id",
+  // checkAuth(...UserRoleEnums),
+  RidesController.updateRideStatus
 );
 
 router.get(
   "/viewMyRides",
-  checkAuth(...UserRoleEnums),
+  // checkAuth(...UserRoleEnums),
   RidesController.viewMyRides
 );
 
 router.get(
   "/viewEarningHistory/:id",
-  checkAuth(...UserRoleEnums),
+  // checkAuth(...UserRoleEnums),
   RidesController.viewEarningHistory
 );
 

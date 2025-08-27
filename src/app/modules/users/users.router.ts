@@ -21,6 +21,12 @@ router.post(
   UserController.userLogin
 );
 
+router.get("/me", UserController.getAuthenticatedUserDetails);
+
+router.post("/logout", UserController.logout);
+
+router.post("/refresh-token", UserController.getNewAccessToken);
+
 router.patch(
   "/updateUser/:id",
   zodValidationRequest(UserValidation.userUpdateZodSchema),
