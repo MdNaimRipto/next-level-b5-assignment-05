@@ -14,16 +14,28 @@ const getAllUsers = async (
 
   const roleFilter = role ? { role } : {};
 
-  const result = await Users.find(roleFilter).select(
-    "_id userName email contactNumber"
+  const allUsers = await Users.find(roleFilter).select(
+    "_id userName email contactNumber role isBlocked"
   );
+
+  const result = allUsers.filter((user) => user.role !== "admin");
+
   return result;
 };
 
 const getAllRides = async (token: string): Promise<IRides[]> => {
   checkIsAdmin(token);
 
-  const result = await Rides.find();
+  const result = await Rides.find().populate([
+    {
+      path: "driverId",
+      select: "userName email _id",
+    },
+    {
+      path: "riderId",
+      select: "userName _id",
+    },
+  ]);
   return result;
 };
 

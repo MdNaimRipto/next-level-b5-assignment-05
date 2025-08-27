@@ -70,8 +70,12 @@ const requestRide = async (token: string, payload: IRides): Promise<null> => {
 const updateRideAcceptStatus = async (
   token: string,
   rideId: string,
-  acceptStatus: acceptStatusEnums
+  payload: {
+    acceptStatus: acceptStatusEnums;
+  }
 ): Promise<null> => {
+  const { acceptStatus } = payload;
+
   const { role } = jwtHelpers.jwtVerify(token, envConfig.jwt_access_secret);
 
   if (role !== "driver") {
@@ -113,8 +117,12 @@ const updateRideAcceptStatus = async (
 const updateRideStatus = async (
   token: string,
   rideId: string,
-  rideStatus: rideStatusEnums
+  payload: {
+    rideStatus: rideStatusEnums;
+  }
 ): Promise<null> => {
+  const { rideStatus } = payload;
+
   const { role } = jwtHelpers.jwtVerify(token, envConfig.jwt_access_secret);
 
   const ride = await Rides.findOne({ _id: rideId });

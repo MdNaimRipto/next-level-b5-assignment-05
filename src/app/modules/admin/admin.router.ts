@@ -7,25 +7,25 @@ const router = express.Router();
 
 router.get(
   "/getAllUsers",
-  checkAuth(...UserRoleEnums),
+  // checkAuth(...UserRoleEnums),
   AdminController.getAllUsers
 );
 
 router.get(
   "/getAllRides",
-  checkAuth(...UserRoleEnums),
+  // checkAuth(...UserRoleEnums),
   AdminController.getAllRides
 );
 
 router.patch(
   "/updateApproveStatus/:id",
-  checkAuth(...UserRoleEnums),
+  // checkAuth(...UserRoleEnums),
   AdminController.changeUserApproveStatus
 );
 
 router.patch(
   "/updateBlockStatus/:id",
-  checkAuth(...UserRoleEnums),
+  // checkAuth(...UserRoleEnums),
   AdminController.changeUserBlockStatus
 );
 
