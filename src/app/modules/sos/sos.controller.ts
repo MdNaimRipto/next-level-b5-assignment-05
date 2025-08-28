@@ -6,7 +6,8 @@ import { SosService } from "./sos.service";
 
 // Request SOS
 const requestSos = catchAsync(async (req: Request, res: Response) => {
-  const sos = await SosService.requestSos(req.body);
+  const { ...payload } = req.body;
+  const sos = await SosService.requestSos(payload);
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.CREATED,
@@ -17,15 +18,8 @@ const requestSos = catchAsync(async (req: Request, res: Response) => {
 
 // Get SOS by Ride ID
 const getSosByRideId = catchAsync(async (req: Request, res: Response) => {
-  const sos = await SosService.getSosByRideId(req.params.rideId);
-  if (!sos) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: httpStatus.NOT_FOUND,
-      message: "SOS not found",
-      data: null,
-    });
-  }
+  const sos = await SosService.getSosByRideId(req.params.id);
+
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
@@ -36,18 +30,8 @@ const getSosByRideId = catchAsync(async (req: Request, res: Response) => {
 
 // Update SOS Status
 const updateSosStatus = catchAsync(async (req: Request, res: Response) => {
-  const sos = await SosService.updateSosStatus(
-    req.params.rideId,
-    req.body.status
-  );
-  if (!sos) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: httpStatus.NOT_FOUND,
-      message: "SOS not found",
-      data: null,
-    });
-  }
+  const sos = await SosService.updateSosStatus(req.params.id);
+
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,

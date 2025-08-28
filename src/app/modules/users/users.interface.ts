@@ -1,5 +1,6 @@
 export type userRoleEnums = "admin" | "rider" | "driver";
 export type isActiveEnums = "active" | "offline" | "idle";
+export type vehicleTypeEnums = "car" | "bike";
 
 export interface IUser {
   userName: string;
@@ -11,6 +12,10 @@ export interface IUser {
   isActive: isActiveEnums;
   isApproved: boolean;
   isBlocked: boolean;
+  vehicle: {
+    type: vehicleTypeEnums;
+    number: string;
+  } | null;
 }
 
 export interface IVerifyAccount {
@@ -29,8 +34,19 @@ export interface IAuthenticatedUser {
 }
 
 export interface IUpdatePassword {
-  userId: string;
   currentPassword: string;
   newPassword: string;
   confirmPassword: string;
+}
+
+export interface IUserFilters {
+  searchTerm?: string;
+  userName?: string;
+  email?: string;
+  role?: userRoleEnums;
+  isVerified?: string;
+  isActive?: string;
+  isApproved?: string;
+  isBlocked?: string;
+  contactNumber?: string;
 }

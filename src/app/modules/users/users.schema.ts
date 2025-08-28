@@ -1,6 +1,10 @@
 import { model, Schema } from "mongoose";
 import { IUser } from "./users.interface";
-import { IsActiveEnums, UserRoleEnums } from "./user.constant";
+import {
+  IsActiveEnums,
+  UserRoleEnums,
+  VehicleTypeEnums,
+} from "./user.constant";
 
 export const usersSchema = new Schema<IUser>(
   {
@@ -32,6 +36,10 @@ export const usersSchema = new Schema<IUser>(
     },
     isApproved: { type: Boolean, required: true, default: false },
     isBlocked: { type: Boolean, required: true, default: false },
+    vehicle: {
+      type: Schema.Types.Mixed, // allows null or object
+      default: null,
+    },
   },
   {
     timestamps: true,

@@ -19,9 +19,30 @@ export interface IRides {
   };
   fair: number;
   cancelledBy?: canceledByEnum;
+  createdAt: Date;
 }
 
 export interface IUpdateRideStatus {
   acceptStatus: acceptStatusEnums;
   rideStatus: rideStatusEnums;
+}
+
+export interface IRideFilters {
+  searchTerm?: string;
+  from?: string;
+  to?: string;
+  fair?: string;
+  updatedAt?: string;
+  acceptStatus?: acceptStatusEnums;
+  rideStatus?: rideStatusEnums;
+}
+
+export type EarningFilter = "daily" | "weekly" | "monthly";
+
+export interface EarningDashboard {
+  totalEarning: number;
+  totalCompletedRides: number;
+  currentActiveRides: number;
+  totalCanceledRides: number;
+  filteredEarning: number;
 }

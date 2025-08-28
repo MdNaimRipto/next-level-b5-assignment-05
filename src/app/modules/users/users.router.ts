@@ -28,22 +28,22 @@ router.post("/logout", UserController.logout);
 router.post("/refresh-token", UserController.getNewAccessToken);
 
 router.patch(
-  "/updateUser/:id",
+  "/updateUser",
   zodValidationRequest(UserValidation.userUpdateZodSchema),
-  checkAuth(...UserRoleEnums),
+  // checkAuth(...UserRoleEnums),
   UserController.updatedUser
 );
 
 router.patch(
   "/updatePassword",
   zodValidationRequest(UserValidation.updatePasswordZodSchema),
-  checkAuth(...UserRoleEnums),
+  // checkAuth(...UserRoleEnums),
   UserController.updatePassword
 );
 
 router.patch(
   "/updateActiveStatus",
-  checkAuth(...UserRoleEnums),
+  // checkAuth(...UserRoleEnums),
   UserController.updateActiveStatus
 );
 

@@ -56,8 +56,6 @@ const getAuthenticatedUserDetails = catchAsync(
   async (req: Request, res: Response) => {
     const token = jwtHelpers.verifyAuthToken(req);
 
-    console.log({ userToken: token });
-
     const result = await UserService.getAuthenticatedUserDetails(token);
 
     sendResponse(res, {
@@ -97,11 +95,10 @@ const getNewAccessToken = catchAsync(async (req: Request, res: Response) => {
 
 // Update User
 const updatedUser = catchAsync(async (req: Request, res: Response) => {
-  const { id } = req.params;
   const { ...payload } = req.body;
   const token = jwtHelpers.verifyAuthToken(req);
 
-  const result = await UserService.updateUser(id, payload, token);
+  const result = await UserService.updateUser(payload, token);
 
   sendResponse(res, {
     success: true,
@@ -128,10 +125,10 @@ const updatePassword = catchAsync(async (req: Request, res: Response) => {
 
 // Update Active Status
 const updateActiveStatus = catchAsync(async (req: Request, res: Response) => {
-  const { status } = req.body;
+  const { ...payload } = req.body;
   const token = jwtHelpers.verifyAuthToken(req);
 
-  const result = await UserService.updateActiveStatus(token, status);
+  const result = await UserService.updateActiveStatus(token, payload);
 
   sendResponse(res, {
     success: true,

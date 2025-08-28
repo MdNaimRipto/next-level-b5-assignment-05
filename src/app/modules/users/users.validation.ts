@@ -63,9 +63,6 @@ const updatePasswordZodSchema = z.object({
     confirmPassword: z.string({
       required_error: "Confirm Password is Required",
     }),
-    userId: z.string({
-      required_error: "UID is Required",
-    }),
   }),
 });
 

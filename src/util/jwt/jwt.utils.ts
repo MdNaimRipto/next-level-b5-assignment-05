@@ -4,6 +4,7 @@ import ApiError from "../../errors/ApiError";
 import httpStatus from "http-status";
 import { userRoleEnums } from "../../app/modules/users/users.interface";
 import { Types } from "mongoose";
+import { envConfig } from "../../config/config";
 
 export interface IJwtPayload {
   email: string;
@@ -33,6 +34,7 @@ export const setAuthCookie = (res: Response, tokenInfo: AuthTokens) => {
     res.cookie("accessToken", tokenInfo.accessToken, {
       httpOnly: true,
       secure: false,
+      maxAge: 86400000,
     });
   }
 
@@ -40,6 +42,7 @@ export const setAuthCookie = (res: Response, tokenInfo: AuthTokens) => {
     res.cookie("refreshToken", tokenInfo.refreshToken, {
       httpOnly: true,
       secure: false,
+      maxAge: 604800000,
     });
   }
 };

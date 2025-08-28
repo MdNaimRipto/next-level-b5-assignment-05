@@ -4,6 +4,10 @@ import catchAsync from "../../../util/catchAsync";
 import sendResponse from "../../../util/sendResponse";
 import { jwtHelpers } from "../../../util/jwt/jwt.utils";
 import { RidesService } from "./rides.service";
+import { pick } from "../../../util/pagination/pagination.utils";
+import { RideFilterableFields } from "./rides.constant";
+import { paginationFields } from "../../../util/pagination/pagination.constant";
+import { EarningFilter } from "./rides.interface";
 
 // User Register
 const getAllActiveRides = catchAsync(async (req: Request, res: Response) => {
@@ -19,7 +23,6 @@ const getAllActiveRides = catchAsync(async (req: Request, res: Response) => {
 
 const requestRide = catchAsync(async (req: Request, res: Response) => {
   const token = jwtHelpers.verifyAuthToken(req);
-  console.log({ token });
 
   const { ...payload } = req.body;
 
@@ -71,8 +74,10 @@ const updateRideStatus = catchAsync(async (req: Request, res: Response) => {
 
 const viewMyRides = catchAsync(async (req: Request, res: Response) => {
   const token = jwtHelpers.verifyAuthToken(req);
+  const filters = pick(req.query, RideFilterableFields);
+  const options = pick(req.query, paginationFields);
 
-  const result = await RidesService.viewMyRides(token);
+  const result = await RidesService.viewMyRides(token, filters, options);
 
   sendResponse(res, {
     success: true,
@@ -84,9 +89,9 @@ const viewMyRides = catchAsync(async (req: Request, res: Response) => {
 
 const viewEarningHistory = catchAsync(async (req: Request, res: Response) => {
   const token = jwtHelpers.verifyAuthToken(req);
-  const { id } = req.params;
+  const filter = req.query.filter as unknown as EarningFilter;
 
-  const result = await RidesService.viewEarningHistory(token, id);
+  const result = await RidesService.viewEarningHistory(token, filter);
 
   sendResponse(res, {
     success: true,

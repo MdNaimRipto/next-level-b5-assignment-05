@@ -18,15 +18,21 @@ router.get(
 );
 
 router.patch(
-  "/updateApproveStatus/:id",
+  "/updateUserApproveStatus/:id",
   // checkAuth(...UserRoleEnums),
   AdminController.changeUserApproveStatus
 );
 
 router.patch(
-  "/updateBlockStatus/:id",
+  "/updateUserBlockStatus/:id",
   // checkAuth(...UserRoleEnums),
   AdminController.changeUserBlockStatus
+);
+
+router.get(
+  "/viewAnalytics",
+  // checkAuth(...UserRoleEnums),
+  AdminController.viewAnalytics
 );
 
 export const AdminRouter = router;

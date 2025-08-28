@@ -2,6 +2,9 @@ import ApiError from "../../../errors/ApiError";
 import { Users } from "../users/users.schema";
 import {
   acceptStatusEnums,
+  EarningDashboard,
+  EarningFilter,
+  IRideFilters,
   IRides,
   IUpdateRideStatus,
   rideStatusEnums,
@@ -11,6 +14,13 @@ import { Rides } from "./rides.schema";
 import { IUser } from "../users/users.interface";
 import { envConfig } from "../../../config/config";
 import { jwtHelpers } from "../../../util/jwt/jwt.utils";
+import {
+  IGenericPaginationResponse,
+  IPaginationOptions,
+} from "../../../util/pagination/pagination.interface";
+import { RideSearchableFields } from "./rides.constant";
+import { calculatePaginationFunction } from "../../../util/pagination/pagination.utils";
+import { SortOrder } from "mongoose";
 
 const getAllActiveRides = async (): Promise<IUser[]> => {
   const result = await Users.find({
@@ -169,63 +179,170 @@ const updateRideStatus = async (
   return null;
 };
 
-const viewMyRides = async (token: string): Promise<IRides[]> => {
+const viewMyRides = async (
+  token: string,
+  filters: IRideFilters,
+  paginationOptions: IPaginationOptions
+): Promise<IGenericPaginationResponse<IRides[]>> => {
   const { role, id } = jwtHelpers.jwtVerify(token, envConfig.jwt_access_secret);
+
+  const { searchTerm, ...filterData } = filters;
+
+  const andConditions = [];
+  if (searchTerm) {
+    andConditions.push({
+      $or: RideSearchableFields.map((field) => ({
+        [field]: {
+          $regex: searchTerm,
+          $options: "i",
+        },
+      })),
+    });
+  }
+  //
+  if (Object.keys(filterData).length) {
+    const filterConditions: { [x: string]: string }[] = [];
+
+    Object.entries(filterData).forEach(([field, value]) => {
+      if (field === "from" || field === "to") {
+        filterConditions.push({
+          [`location.${field}`]: value,
+        });
+      } else if (field === "fair") {
+        const fair = parseInt(value);
+        if (!isNaN(fair)) {
+          filterConditions.push({
+            fair: { $lte: fair } as any,
+          });
+        }
+      } else {
+        filterConditions.push({ [field]: value });
+      }
+    });
+
+    andConditions.push({
+      $and: filterConditions,
+    });
+  }
+  //
+  const { page, limit, skip, sortBy, sortOrder } =
+    calculatePaginationFunction(paginationOptions);
+
+  const sortConditions: { [key: string]: SortOrder } = {};
+
+  if (sortBy && sortOrder) {
+    sortConditions[sortBy] = sortOrder;
+  }
+  //
+  const checkAndCondition =
+    andConditions?.length > 0 ? { $and: andConditions } : {};
+
   let result: IRides[];
   if (role === "rider") {
-    result = await Rides.find({ riderId: id }).populate([
-      {
-        path: "driverId",
-        select: "userName _id",
-      },
-    ]);
+    result = await Rides.find({ riderId: id, ...checkAndCondition })
+      .populate([
+        {
+          path: "driverId",
+          select: "userName _id",
+        },
+      ])
+      .sort(sortConditions)
+      .skip(skip)
+      .limit(limit);
   } else if (role === "driver") {
-    result = await Rides.find({ driverId: id }).populate([
-      {
-        path: "riderId",
-        select: "userName _id",
-      },
-    ]);
+    result = await Rides.find({ driverId: id, ...checkAndCondition })
+      .populate([
+        {
+          path: "riderId",
+          select: "userName _id",
+        },
+      ])
+      .sort(sortConditions)
+      .skip(skip)
+      .limit(limit);
   } else {
     result = [];
   }
 
-  return result;
+  const total = await Rides.countDocuments();
+
+  return {
+    meta: {
+      page,
+      limit,
+      total,
+    },
+    data: result,
+  };
 };
 
 const viewEarningHistory = async (
   token: string,
-  driverId: string
-): Promise<number> => {
+  filter: EarningFilter = "monthly"
+): Promise<EarningDashboard> => {
   const { role, id } = jwtHelpers.jwtVerify(token, envConfig.jwt_access_secret);
 
   if (role !== "driver") {
     throw new ApiError(
       httpStatus.UNAUTHORIZED,
-      "Unauthorized access. Only drivers can see the total earnings."
+      "Unauthorized access. Only drivers can see earnings."
     );
   }
 
-  if (role === "driver" && String(id) !== String(driverId)) {
-    throw new ApiError(
-      httpStatus.FORBIDDEN,
-      "You can only access your own earnings"
-    );
+  // All rides for this driver
+  const allRides = await Rides.find({ driverId: id });
+
+  // Cards
+  const totalEarning = allRides
+    .filter((r) => r.rideStatus === "completed")
+    .reduce((sum, r) => sum + (r.fair || 0), 0);
+
+  const totalCompletedRides = allRides.filter(
+    (r) => r.rideStatus === "completed"
+  ).length;
+
+  const currentActiveRides = allRides.filter(
+    (r) => r.rideStatus === "inTransit"
+  ).length;
+
+  const totalCanceledRides = allRides.filter(
+    (r) => r.rideStatus === "cancelled"
+  ).length;
+
+  // Filter timeframe
+  const now = new Date();
+  let startDate: Date;
+
+  switch (filter) {
+    case "daily":
+      startDate = new Date(now);
+      startDate.setDate(now.getDate() - 1); // last 1 day
+      break;
+    case "weekly":
+      startDate = new Date(now);
+      startDate.setDate(now.getDate() - 7); // last 7 days
+      break;
+    case "monthly":
+      startDate = new Date(now);
+      startDate.setMonth(now.getMonth() - 1); // last 1 month
+      break;
+    default:
+      startDate = new Date(now);
+      startDate.setMonth(now.getMonth() - 1);
   }
 
-  // Fetch all completed rides by this driver
-  const completedRides = await Rides.find({
-    driverId,
-    rideStatus: "completed",
-  });
+  // Filtered earnings
+  const filteredEarning = allRides
+    .filter((r) => r.rideStatus === "completed" && r.createdAt >= startDate)
+    .reduce((sum, r) => sum + (r.fair || 0), 0);
 
-  // Sum all the fares
-  const totalFare = completedRides.reduce(
-    (sum, ride) => sum + (ride.fair || 0),
-    0
-  );
-
-  return totalFare;
+  return {
+    totalEarning,
+    totalCompletedRides,
+    currentActiveRides,
+    totalCanceledRides,
+    filteredEarning, // <-- single value for chart
+  };
 };
 
 export const RidesService = {

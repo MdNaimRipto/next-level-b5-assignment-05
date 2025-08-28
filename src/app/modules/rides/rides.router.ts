@@ -34,7 +34,7 @@ router.get(
 );
 
 router.get(
-  "/viewEarningHistory/:id",
+  "/viewEarningHistory",
   // checkAuth(...UserRoleEnums),
   RidesController.viewEarningHistory
 );

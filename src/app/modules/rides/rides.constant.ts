@@ -16,3 +16,14 @@ export const RideStatusEnums: rideStatusEnums[] = [
   "cancelled",
 ];
 export const CancelByEnum: canceledByEnum[] = ["none", "rider", "driver"];
+
+export const RideSearchableFields = ["location.from", "location.to"];
+
+export const RideFilterableFields = [
+  "searchTerm",
+  "from",
+  "to",
+  "fair",
+  "updatedAt",
+  "rideStatus",
+];

@@ -159,7 +159,7 @@ const userLogin = async (payload: ILoginUser): Promise<IAuthenticatedUser> => {
     throw new ApiError(httpStatus.UNAUTHORIZED, "Invalid Email Or Password");
   }
 
-  const { isVerified, isBlocked } = isExists;
+  const { isVerified, isBlocked, isApproved } = isExists;
 
   if (isBlocked) {
     throw new ApiError(
@@ -172,6 +172,13 @@ const userLogin = async (payload: ILoginUser): Promise<IAuthenticatedUser> => {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
       "Your account is not verified yet. Please check email and verify your account"
+    );
+  }
+
+  if (!isApproved) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "Your account has been suspended by the admin. Contact support for more info"
     );
   }
 
@@ -246,13 +253,15 @@ const getNewAccessToken = async (refreshToken: string) => {
 
 //* Update User
 const updateUser = async (
-  userID: string,
   payload: Partial<IUser>,
   token: string
 ): Promise<null> => {
-  jwtHelpers.jwtVerify(token, envConfig.jwt_access_secret as Secret);
+  const { id } = jwtHelpers.jwtVerify(
+    token,
+    envConfig.jwt_access_secret as Secret
+  );
 
-  const isExistsUser = await Users.findById({ _id: userID });
+  const isExistsUser = await Users.findById({ _id: id });
   if (!isExistsUser) {
     throw new ApiError(httpStatus.NOT_FOUND, "User Not Found");
   }
@@ -264,6 +273,7 @@ const updateUser = async (
     isActive,
     role,
     password,
+    vehicle,
     ...updatePayload
   } = payload;
 
@@ -319,7 +329,25 @@ const updateUser = async (
     updatePayload.contactNumber = payload.contactNumber;
   }
 
-  await Users.findOneAndUpdate({ _id: userID }, updatePayload, {
+  // ✅ vehicle update logic
+  if (vehicle !== undefined) {
+    if (isExistsUser.role !== "driver") {
+      throw new ApiError(
+        httpStatus.UNAUTHORIZED,
+        "Only drivers can update vehicle details"
+      );
+    }
+
+    if (vehicle && Object.keys(vehicle).length > 0) {
+      Object.keys(vehicle).map((key) => {
+        const locationsKey = `vehicle.${key}`;
+        (updatePayload as any)[locationsKey] =
+          vehicle[key as keyof typeof vehicle];
+      });
+    }
+  }
+
+  await Users.findOneAndUpdate({ _id: id }, updatePayload, {
     new: true,
   });
 
@@ -331,11 +359,14 @@ const updatePassword = async (
   payload: IUpdatePassword,
   token: string
 ): Promise<null> => {
-  jwtHelpers.jwtVerify(token, envConfig.jwt_access_secret as Secret);
+  const { id } = jwtHelpers.jwtVerify(
+    token,
+    envConfig.jwt_access_secret as Secret
+  );
 
-  const { userId, currentPassword, newPassword, confirmPassword } = payload;
+  const { currentPassword, newPassword, confirmPassword } = payload;
 
-  const isExistsUser = await Users.findById({ _id: userId });
+  const isExistsUser = await Users.findById({ _id: id });
   if (!isExistsUser) {
     throw new ApiError(httpStatus.NOT_FOUND, "User Not Found");
   }
@@ -374,7 +405,7 @@ const updatePassword = async (
   const pass = await bcrypt.hash(newPassword, Number(envConfig.salt_round));
   isExistsUser.password = pass;
 
-  const user = await Users.findOneAndUpdate({ _id: userId }, isExistsUser, {
+  const user = await Users.findOneAndUpdate({ _id: id }, isExistsUser, {
     new: true,
   });
 
@@ -384,12 +415,16 @@ const updatePassword = async (
 // * Update Active status
 const updateActiveStatus = async (
   token: string,
-  isActive: isActiveEnums
+  payload: {
+    isActive: isActiveEnums;
+  }
 ): Promise<null> => {
   const { email, id } = jwtHelpers.jwtVerify(
     token,
     envConfig.jwt_access_secret
   );
+
+  const { isActive } = payload;
 
   const isExistsUser = await Users.findOne({ $and: [{ email }, { _id: id }] });
   if (!isExistsUser) {
