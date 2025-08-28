@@ -16,8 +16,6 @@ const verifyEmailTemplate = (name, verifyURL) => {
           border-radius: 5px;
           margin: 15px 0;
         ">Verify Email</a>
-      <p style="color: #e63946;"><strong>Note:</strong> Since this is a backend-only assignment, the link above may not work as expected. Please refer to the README file on GitHub to manually verify your account:</p>
-      <p><a href="${readmeLink}" target="_blank" style="color: #1d3557;">${readmeLink}</a></p>
       <br/>
       <p>Regards,<br/>Your Project Team</p>
     </div>

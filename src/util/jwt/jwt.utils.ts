@@ -33,16 +33,18 @@ export const setAuthCookie = (res: Response, tokenInfo: AuthTokens) => {
   if (tokenInfo.accessToken) {
     res.cookie("accessToken", tokenInfo.accessToken, {
       httpOnly: true,
-      secure: false,
+      secure: true,
       maxAge: 86400000,
+      sameSite: "none",
     });
   }
 
   if (tokenInfo.refreshToken) {
     res.cookie("refreshToken", tokenInfo.refreshToken, {
       httpOnly: true,
-      secure: false,
+      secure: true,
       maxAge: 604800000,
+      sameSite: "none",
     });
   }
 };

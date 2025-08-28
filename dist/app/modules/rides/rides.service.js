@@ -8,6 +8,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -19,15 +30,12 @@ const http_status_1 = __importDefault(require("http-status"));
 const rides_schema_1 = require("./rides.schema");
 const config_1 = require("../../../config/config");
 const jwt_utils_1 = require("../../../util/jwt/jwt.utils");
+const rides_constant_1 = require("./rides.constant");
+const pagination_utils_1 = require("../../../util/pagination/pagination.utils");
 const getAllActiveRides = () => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield users_schema_1.Users.find({
-        $and: [
-            { role: "driver" },
-            { isActive: "active" },
-            { isApproved: true },
-            { isBlocked: false },
-        ],
-    }).select("_id userName email contactNumber");
+        $and: [{ role: "driver" }, { isApproved: true }, { isBlocked: false }],
+    }).select("_id userName email contactNumber isActive");
     return result;
 });
 const requestRide = (token, payload) => __awaiter(void 0, void 0, void 0, function* () {
@@ -55,98 +63,201 @@ const requestRide = (token, payload) => __awaiter(void 0, void 0, void 0, functi
     yield rides_schema_1.Rides.create(payload);
     return null;
 });
-const updateRide = (token, rideId, payload) => __awaiter(void 0, void 0, void 0, function* () {
+const updateRideAcceptStatus = (token, rideId, payload) => __awaiter(void 0, void 0, void 0, function* () {
+    const { acceptStatus } = payload;
     const { role } = jwt_utils_1.jwtHelpers.jwtVerify(token, config_1.envConfig.jwt_access_secret);
-    console.log({ role });
-    const { acceptStatus, rideStatus } = payload;
-    const isRideExists = yield rides_schema_1.Rides.findOne({ _id: rideId });
-    if (!isRideExists) {
-        throw new ApiError_1.default(http_status_1.default.NOT_FOUND, "Ride Not found");
+    if (role !== "driver") {
+        throw new ApiError_1.default(http_status_1.default.FORBIDDEN, "Only driver can update accept status");
     }
-    if ((isRideExists.rideStatus === "completed" ||
-        isRideExists.rideStatus === "inTransit") &&
-        rideStatus === "cancelled") {
-        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, "Cannot cancel completed Or Ongoing rides");
+    const ride = yield rides_schema_1.Rides.findOne({ _id: rideId });
+    if (!ride)
+        throw new ApiError_1.default(http_status_1.default.NOT_FOUND, "Ride not found");
+    if (ride.acceptStatus === "rejected" || ride.rideStatus === "cancelled") {
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, "Cannot update rejected or cancelled rides");
     }
-    if (isRideExists.acceptStatus === "rejected" ||
-        isRideExists.rideStatus === "cancelled") {
-        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, "Cannot update rejected or canceled rides");
+    if (ride.acceptStatus === "accepted" && acceptStatus === "rejected") {
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, "This ride has already been accepted and cannot be rejected");
     }
-    if (isRideExists.acceptStatus === "accepted" && acceptStatus === "rejected") {
-        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, "This Ride already has been accepted and cannot change the status");
+    // ✅ Update
+    if (acceptStatus === "rejected") {
+        ride.acceptStatus = "rejected";
+        ride.cancelledBy = "driver";
     }
-    if (acceptStatus) {
-        if (acceptStatus === "rejected") {
-            if (role !== "driver") {
-                throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, "Only Driver Can Reject Rides");
-            }
-            isRideExists.acceptStatus = acceptStatus;
-            isRideExists.cancelledBy = "driver";
-        }
-        if (acceptStatus === "accepted") {
-            if (role !== "driver") {
-                throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, "Only Driver Can Accept Rides");
-            }
-            isRideExists.acceptStatus = acceptStatus;
-        }
+    else if (acceptStatus === "accepted") {
+        ride.acceptStatus = "accepted";
     }
-    if (rideStatus) {
-        if (rideStatus === "cancelled") {
-            isRideExists.rideStatus = rideStatus;
-            if (role === "driver") {
-                isRideExists.cancelledBy = "driver";
-            }
-            if (role === "rider") {
-                isRideExists.cancelledBy = "rider";
-            }
-        }
-        if (rideStatus && rideStatus !== "cancelled") {
-            if (rideStatus === "inTransit" || rideStatus === "completed") {
-                if (role !== "driver") {
-                    throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, "Only driver can update ride to ongoing or completed");
-                }
-            }
-            isRideExists.rideStatus = rideStatus;
-        }
-    }
-    yield rides_schema_1.Rides.findOneAndUpdate({ _id: rideId }, isRideExists);
+    yield rides_schema_1.Rides.findOneAndUpdate({ _id: rideId }, ride);
     return null;
 });
-const viewMyRides = (token) => __awaiter(void 0, void 0, void 0, function* () {
+const updateRideStatus = (token, rideId, payload) => __awaiter(void 0, void 0, void 0, function* () {
+    const { rideStatus } = payload;
+    const { role } = jwt_utils_1.jwtHelpers.jwtVerify(token, config_1.envConfig.jwt_access_secret);
+    const ride = yield rides_schema_1.Rides.findOne({ _id: rideId });
+    if (!ride)
+        throw new ApiError_1.default(http_status_1.default.NOT_FOUND, "Ride not found");
+    if (ride.acceptStatus === "rejected" || ride.rideStatus === "cancelled") {
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, "Cannot update rejected or cancelled rides");
+    }
+    // 🚫 Cancel rules
+    if ((ride.rideStatus === "completed" || ride.rideStatus === "inTransit") &&
+        rideStatus === "cancelled") {
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, "Cannot cancel completed or ongoing rides");
+    }
+    if (rideStatus === "cancelled") {
+        if (role !== "driver") {
+            throw new ApiError_1.default(http_status_1.default.FORBIDDEN, "Only driver can cancel rides");
+        }
+        ride.rideStatus = "cancelled";
+        ride.cancelledBy = "driver";
+    }
+    else {
+        // pending → inTransit → completed
+        if (rideStatus === "inTransit" || rideStatus === "completed") {
+            if (role !== "driver") {
+                throw new ApiError_1.default(http_status_1.default.FORBIDDEN, "Only driver can update ride to ongoing or completed");
+            }
+        }
+        ride.rideStatus = rideStatus;
+    }
+    yield rides_schema_1.Rides.findOneAndUpdate({ _id: rideId }, ride);
+    return null;
+});
+const viewMyRides = (token, filters, paginationOptions) => __awaiter(void 0, void 0, void 0, function* () {
     const { role, id } = jwt_utils_1.jwtHelpers.jwtVerify(token, config_1.envConfig.jwt_access_secret);
+    const { searchTerm } = filters, filterData = __rest(filters, ["searchTerm"]);
+    const andConditions = [];
+    if (searchTerm) {
+        andConditions.push({
+            $or: rides_constant_1.RideSearchableFields.map((field) => ({
+                [field]: {
+                    $regex: searchTerm,
+                    $options: "i",
+                },
+            })),
+        });
+    }
+    //
+    if (Object.keys(filterData).length) {
+        const filterConditions = [];
+        Object.entries(filterData).forEach(([field, value]) => {
+            if (field === "from" || field === "to") {
+                filterConditions.push({
+                    [`location.${field}`]: value,
+                });
+            }
+            else if (field === "fair") {
+                const fair = parseInt(value);
+                if (!isNaN(fair)) {
+                    filterConditions.push({
+                        fair: { $lte: fair },
+                    });
+                }
+            }
+            else {
+                filterConditions.push({ [field]: value });
+            }
+        });
+        andConditions.push({
+            $and: filterConditions,
+        });
+    }
+    //
+    const { page, limit, skip, sortBy, sortOrder } = (0, pagination_utils_1.calculatePaginationFunction)(paginationOptions);
+    const sortConditions = {};
+    if (sortBy && sortOrder) {
+        sortConditions[sortBy] = sortOrder;
+    }
+    //
+    const checkAndCondition = (andConditions === null || andConditions === void 0 ? void 0 : andConditions.length) > 0 ? { $and: andConditions } : {};
     let result;
     if (role === "rider") {
-        result = yield rides_schema_1.Rides.find({ riderId: id });
+        result = yield rides_schema_1.Rides.find(Object.assign({ riderId: id }, checkAndCondition))
+            .populate([
+            {
+                path: "driverId",
+                select: "userName _id",
+            },
+        ])
+            .sort(sortConditions)
+            .skip(skip)
+            .limit(limit);
     }
     else if (role === "driver") {
-        result = yield rides_schema_1.Rides.find({ driverId: id });
+        result = yield rides_schema_1.Rides.find(Object.assign({ driverId: id }, checkAndCondition))
+            .populate([
+            {
+                path: "riderId",
+                select: "userName _id",
+            },
+        ])
+            .sort(sortConditions)
+            .skip(skip)
+            .limit(limit);
     }
     else {
         result = [];
     }
-    return result;
+    const total = yield rides_schema_1.Rides.countDocuments();
+    return {
+        meta: {
+            page,
+            limit,
+            total,
+        },
+        data: result,
+    };
 });
-const viewEarningHistory = (token, driverId) => __awaiter(void 0, void 0, void 0, function* () {
+const viewEarningHistory = (token_1, ...args_1) => __awaiter(void 0, [token_1, ...args_1], void 0, function* (token, filter = "monthly") {
     const { role, id } = jwt_utils_1.jwtHelpers.jwtVerify(token, config_1.envConfig.jwt_access_secret);
     if (role !== "driver") {
-        throw new ApiError_1.default(http_status_1.default.UNAUTHORIZED, "Unauthorized access. Only drivers can see the total earnings.");
+        throw new ApiError_1.default(http_status_1.default.UNAUTHORIZED, "Unauthorized access. Only drivers can see earnings.");
     }
-    if (role === "driver" && String(id) !== String(driverId)) {
-        throw new ApiError_1.default(http_status_1.default.FORBIDDEN, "You can only access your own earnings");
+    // All rides for this driver
+    const allRides = yield rides_schema_1.Rides.find({ driverId: id });
+    // Cards
+    const totalEarning = allRides
+        .filter((r) => r.rideStatus === "completed")
+        .reduce((sum, r) => sum + (r.fair || 0), 0);
+    const totalCompletedRides = allRides.filter((r) => r.rideStatus === "completed").length;
+    const currentActiveRides = allRides.filter((r) => r.rideStatus === "inTransit").length;
+    const totalCanceledRides = allRides.filter((r) => r.rideStatus === "cancelled").length;
+    // Filter timeframe
+    const now = new Date();
+    let startDate;
+    switch (filter) {
+        case "daily":
+            startDate = new Date(now);
+            startDate.setDate(now.getDate() - 1); // last 1 day
+            break;
+        case "weekly":
+            startDate = new Date(now);
+            startDate.setDate(now.getDate() - 7); // last 7 days
+            break;
+        case "monthly":
+            startDate = new Date(now);
+            startDate.setMonth(now.getMonth() - 1); // last 1 month
+            break;
+        default:
+            startDate = new Date(now);
+            startDate.setMonth(now.getMonth() - 1);
     }
-    // Fetch all completed rides by this driver
-    const completedRides = yield rides_schema_1.Rides.find({
-        driverId,
-        rideStatus: "completed",
-    });
-    // Sum all the fares
-    const totalFare = completedRides.reduce((sum, ride) => sum + (ride.fair || 0), 0);
-    return totalFare;
+    // Filtered earnings
+    const filteredEarning = allRides
+        .filter((r) => r.rideStatus === "completed" && r.createdAt >= startDate)
+        .reduce((sum, r) => sum + (r.fair || 0), 0);
+    return {
+        totalEarning,
+        totalCompletedRides,
+        currentActiveRides,
+        totalCanceledRides,
+        filteredEarning, // <-- single value for chart
+    };
 });
 exports.RidesService = {
     getAllActiveRides,
     requestRide,
-    updateRide,
+    updateRideAcceptStatus,
+    updateRideStatus,
     viewMyRides,
     viewEarningHistory,
 };

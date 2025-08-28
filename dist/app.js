@@ -18,11 +18,23 @@ const http_status_1 = __importDefault(require("http-status"));
 const globalErrorHandler_1 = __importDefault(require("./middlewares/globalErrorHandler"));
 const pathNotFoundErrorHandler_1 = __importDefault(require("./errors/pathNotFoundErrorHandler"));
 const router_1 = require("./app/routes/router");
+const config_1 = require("./config/config");
+const express_session_1 = __importDefault(require("express-session"));
+const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const app = (0, express_1.default)();
 // ? Middlewares:
-app.use((0, cors_1.default)());
+app.use((0, express_session_1.default)({
+    secret: config_1.envConfig.EXPRESS_SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+}));
+app.use((0, cookie_parser_1.default)());
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: true }));
+app.use((0, cors_1.default)({
+    origin: config_1.envConfig.FRONTEND_URL,
+    credentials: true,
+}));
 // * Basic Page
 app.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     res.status(http_status_1.default.OK).send({

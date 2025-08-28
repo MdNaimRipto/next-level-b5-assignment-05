@@ -32,6 +32,10 @@ exports.usersSchema = new mongoose_1.Schema({
     },
     isApproved: { type: Boolean, required: true, default: false },
     isBlocked: { type: Boolean, required: true, default: false },
+    vehicle: {
+        type: mongoose_1.Schema.Types.Mixed, // allows null or object
+        default: null,
+    },
 }, {
     timestamps: true,
     toJSON: {

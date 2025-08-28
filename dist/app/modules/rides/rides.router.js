@@ -8,12 +8,23 @@ const express_1 = __importDefault(require("express"));
 const zodValidationRequest_1 = __importDefault(require("../../../middlewares/zodValidationRequest"));
 const rides_controller_1 = require("./rides.controller");
 const rides_validation_1 = require("./rides.validation");
-const user_constant_1 = require("../users/user.constant");
-const checkAuth_1 = require("../../../middlewares/checkAuth");
+// import { UserRoleEnums } from "../users/user.constant";
+// import { checkAuth } from "../../../middlewares/checkAuth";
 const router = express_1.default.Router();
 router.get("/activeRides", rides_controller_1.RidesController.getAllActiveRides);
-router.post("/requestRide", (0, zodValidationRequest_1.default)(rides_validation_1.RidesValidation.ridesZodSchema), (0, checkAuth_1.checkAuth)(...user_constant_1.UserRoleEnums), rides_controller_1.RidesController.requestRide);
-router.patch("/updateRide/:id", (0, checkAuth_1.checkAuth)(...user_constant_1.UserRoleEnums), rides_controller_1.RidesController.updateRide);
-router.get("/viewMyRides", (0, checkAuth_1.checkAuth)(...user_constant_1.UserRoleEnums), rides_controller_1.RidesController.viewMyRides);
-router.get("/viewEarningHistory/:id", (0, checkAuth_1.checkAuth)(...user_constant_1.UserRoleEnums), rides_controller_1.RidesController.viewEarningHistory);
+router.post("/requestRide", (0, zodValidationRequest_1.default)(rides_validation_1.RidesValidation.ridesZodSchema), 
+// checkAuth(...UserRoleEnums),
+rides_controller_1.RidesController.requestRide);
+router.patch("/updateRideAcceptStatus/:id", 
+// checkAuth(...UserRoleEnums),
+rides_controller_1.RidesController.updateRideAcceptStatus);
+router.patch("/updateRideStatus/:id", 
+// checkAuth(...UserRoleEnums),
+rides_controller_1.RidesController.updateRideStatus);
+router.get("/viewMyRides", 
+// checkAuth(...UserRoleEnums),
+rides_controller_1.RidesController.viewMyRides);
+router.get("/viewEarningHistory", 
+// checkAuth(...UserRoleEnums),
+rides_controller_1.RidesController.viewEarningHistory);
 exports.RidesRouter = router;

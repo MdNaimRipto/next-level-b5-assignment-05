@@ -36,7 +36,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.jwtHelpers = void 0;
+exports.jwtHelpers = exports.setAuthCookie = void 0;
 const jsonwebtoken_1 = __importStar(require("jsonwebtoken"));
 const ApiError_1 = __importDefault(require("../../errors/ApiError"));
 const http_status_1 = __importDefault(require("http-status"));
@@ -45,17 +45,34 @@ const createToken = (payload, secret, expireTime) => {
         expiresIn: expireTime,
     });
 };
+const setAuthCookie = (res, tokenInfo) => {
+    if (tokenInfo.accessToken) {
+        res.cookie("accessToken", tokenInfo.accessToken, {
+            httpOnly: true,
+            secure: true,
+            maxAge: 86400000,
+            sameSite: "none",
+        });
+    }
+    if (tokenInfo.refreshToken) {
+        res.cookie("refreshToken", tokenInfo.refreshToken, {
+            httpOnly: true,
+            secure: true,
+            maxAge: 604800000,
+            sameSite: "none",
+        });
+    }
+};
+exports.setAuthCookie = setAuthCookie;
 const jwtVerify = (token, secret) => {
     return jsonwebtoken_1.default.verify(token, secret);
 };
 const verifyAuthToken = (req) => {
-    const authorizationHeader = req.headers.authorization;
+    const token = req.cookies.accessToken;
     // Check if the Authorization header is present
-    if (!authorizationHeader) {
+    if (!token) {
         throw new ApiError_1.default(http_status_1.default.UNAUTHORIZED, "Authorization Token is Missing");
     }
-    // Extract the token from the Authorization header
-    const token = authorizationHeader.replace("Bearer ", "");
     return token;
 };
 exports.jwtHelpers = {

@@ -42,32 +42,65 @@ const userRegister = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, v
 }));
 // Verify Account
 const verifyAccount = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const payload = __rest(req.body, []);
-    const result = yield users_service_1.UserService.verifyAccount(payload);
+    const token = req.headers.authorization;
+    const result = yield users_service_1.UserService.verifyAccount(token);
+    (0, jwt_utils_1.setAuthCookie)(res, result);
     (0, sendResponse_1.default)(res, {
         success: true,
         statusCode: http_status_1.default.OK,
         message: "Verification Successful",
-        data: result,
+        data: null,
     });
 }));
 // User Login
 const userLogin = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const authCredentials = __rest(req.body, []);
     const result = yield users_service_1.UserService.userLogin(authCredentials);
+    (0, jwt_utils_1.setAuthCookie)(res, result);
     (0, sendResponse_1.default)(res, {
         success: true,
         statusCode: http_status_1.default.OK,
         message: "Login Successful",
+        data: null,
+    });
+}));
+// Get User
+const getAuthenticatedUserDetails = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const token = jwt_utils_1.jwtHelpers.verifyAuthToken(req);
+    const result = yield users_service_1.UserService.getAuthenticatedUserDetails(token);
+    (0, sendResponse_1.default)(res, {
+        success: true,
+        statusCode: http_status_1.default.OK,
+        message: "User Details Retrieved Successfully",
         data: result,
+    });
+}));
+// Logout
+const logout = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    yield users_service_1.UserService.logout(res);
+    (0, sendResponse_1.default)(res, {
+        success: true,
+        statusCode: http_status_1.default.OK,
+        message: "User Logged Out Successfully",
+        data: null,
+    });
+}));
+const getNewAccessToken = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const refreshToken = req.cookies.refreshToken;
+    const tokenInfo = yield users_service_1.UserService.getNewAccessToken(refreshToken);
+    (0, jwt_utils_1.setAuthCookie)(res, tokenInfo);
+    (0, sendResponse_1.default)(res, {
+        success: true,
+        statusCode: http_status_1.default.OK,
+        message: "New Access Token Retrived Successfully",
+        data: tokenInfo,
     });
 }));
 // Update User
 const updatedUser = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { id } = req.params;
     const payload = __rest(req.body, []);
     const token = jwt_utils_1.jwtHelpers.verifyAuthToken(req);
-    const result = yield users_service_1.UserService.updateUser(id, payload, token);
+    const result = yield users_service_1.UserService.updateUser(payload, token);
     (0, sendResponse_1.default)(res, {
         success: true,
         statusCode: http_status_1.default.OK,
@@ -89,9 +122,9 @@ const updatePassword = (0, catchAsync_1.default)((req, res) => __awaiter(void 0,
 }));
 // Update Active Status
 const updateActiveStatus = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { status } = req.body;
+    const payload = __rest(req.body, []);
     const token = jwt_utils_1.jwtHelpers.verifyAuthToken(req);
-    const result = yield users_service_1.UserService.updateActiveStatus(token, status);
+    const result = yield users_service_1.UserService.updateActiveStatus(token, payload);
     (0, sendResponse_1.default)(res, {
         success: true,
         statusCode: http_status_1.default.OK,
@@ -103,6 +136,9 @@ exports.UserController = {
     userRegister,
     verifyAccount,
     userLogin,
+    getAuthenticatedUserDetails,
+    logout,
+    getNewAccessToken,
     updatedUser,
     updatePassword,
     updateActiveStatus,

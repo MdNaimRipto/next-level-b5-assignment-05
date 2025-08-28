@@ -8,13 +8,20 @@ const express_1 = __importDefault(require("express"));
 const users_controller_1 = require("./users.controller");
 const zodValidationRequest_1 = __importDefault(require("../../../middlewares/zodValidationRequest"));
 const users_validation_1 = require("./users.validation");
-const checkAuth_1 = require("../../../middlewares/checkAuth");
-const user_constant_1 = require("./user.constant");
 const router = express_1.default.Router();
 router.post("/register", (0, zodValidationRequest_1.default)(users_validation_1.UserValidation.usersZodSchema), users_controller_1.UserController.userRegister);
 router.patch("/verifyAccount", users_controller_1.UserController.verifyAccount);
 router.post("/login", (0, zodValidationRequest_1.default)(users_validation_1.UserValidation.loginUserZodSchema), users_controller_1.UserController.userLogin);
-router.patch("/updateUser/:id", (0, zodValidationRequest_1.default)(users_validation_1.UserValidation.userUpdateZodSchema), (0, checkAuth_1.checkAuth)(...user_constant_1.UserRoleEnums), users_controller_1.UserController.updatedUser);
-router.patch("/updatePassword", (0, zodValidationRequest_1.default)(users_validation_1.UserValidation.updatePasswordZodSchema), (0, checkAuth_1.checkAuth)(...user_constant_1.UserRoleEnums), users_controller_1.UserController.updatePassword);
-router.patch("/updateActiveStatus", (0, checkAuth_1.checkAuth)(...user_constant_1.UserRoleEnums), users_controller_1.UserController.updateActiveStatus);
+router.get("/me", users_controller_1.UserController.getAuthenticatedUserDetails);
+router.post("/logout", users_controller_1.UserController.logout);
+router.post("/refresh-token", users_controller_1.UserController.getNewAccessToken);
+router.patch("/updateUser", (0, zodValidationRequest_1.default)(users_validation_1.UserValidation.userUpdateZodSchema), 
+// checkAuth(...UserRoleEnums),
+users_controller_1.UserController.updatedUser);
+router.patch("/updatePassword", (0, zodValidationRequest_1.default)(users_validation_1.UserValidation.updatePasswordZodSchema), 
+// checkAuth(...UserRoleEnums),
+users_controller_1.UserController.updatePassword);
+router.patch("/updateActiveStatus", 
+// checkAuth(...UserRoleEnums),
+users_controller_1.UserController.updateActiveStatus);
 exports.UserRouter = router;

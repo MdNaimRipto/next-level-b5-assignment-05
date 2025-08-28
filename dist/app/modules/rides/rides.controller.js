@@ -29,6 +29,9 @@ const catchAsync_1 = __importDefault(require("../../../util/catchAsync"));
 const sendResponse_1 = __importDefault(require("../../../util/sendResponse"));
 const jwt_utils_1 = require("../../../util/jwt/jwt.utils");
 const rides_service_1 = require("./rides.service");
+const pagination_utils_1 = require("../../../util/pagination/pagination.utils");
+const rides_constant_1 = require("./rides.constant");
+const pagination_constant_1 = require("../../../util/pagination/pagination.constant");
 // User Register
 const getAllActiveRides = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield rides_service_1.RidesService.getAllActiveRides();
@@ -50,11 +53,23 @@ const requestRide = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, vo
         data: result,
     });
 }));
-const updateRide = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const updateRideAcceptStatus = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const token = jwt_utils_1.jwtHelpers.verifyAuthToken(req);
     const { id } = req.params;
     const payload = __rest(req.body, []);
-    const result = yield rides_service_1.RidesService.updateRide(token, id, payload);
+    const result = yield rides_service_1.RidesService.updateRideAcceptStatus(token, id, payload);
+    (0, sendResponse_1.default)(res, {
+        success: true,
+        statusCode: http_status_1.default.OK,
+        message: "Ride Updated Successfully",
+        data: result,
+    });
+}));
+const updateRideStatus = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const token = jwt_utils_1.jwtHelpers.verifyAuthToken(req);
+    const { id } = req.params;
+    const payload = __rest(req.body, []);
+    const result = yield rides_service_1.RidesService.updateRideStatus(token, id, payload);
     (0, sendResponse_1.default)(res, {
         success: true,
         statusCode: http_status_1.default.OK,
@@ -64,7 +79,9 @@ const updateRide = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, voi
 }));
 const viewMyRides = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const token = jwt_utils_1.jwtHelpers.verifyAuthToken(req);
-    const result = yield rides_service_1.RidesService.viewMyRides(token);
+    const filters = (0, pagination_utils_1.pick)(req.query, rides_constant_1.RideFilterableFields);
+    const options = (0, pagination_utils_1.pick)(req.query, pagination_constant_1.paginationFields);
+    const result = yield rides_service_1.RidesService.viewMyRides(token, filters, options);
     (0, sendResponse_1.default)(res, {
         success: true,
         statusCode: http_status_1.default.OK,
@@ -74,8 +91,8 @@ const viewMyRides = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, vo
 }));
 const viewEarningHistory = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const token = jwt_utils_1.jwtHelpers.verifyAuthToken(req);
-    const { id } = req.params;
-    const result = yield rides_service_1.RidesService.viewEarningHistory(token, id);
+    const filter = req.query.filter;
+    const result = yield rides_service_1.RidesService.viewEarningHistory(token, filter);
     (0, sendResponse_1.default)(res, {
         success: true,
         statusCode: http_status_1.default.OK,
@@ -86,7 +103,8 @@ const viewEarningHistory = (0, catchAsync_1.default)((req, res) => __awaiter(voi
 exports.RidesController = {
     getAllActiveRides,
     requestRide,
-    updateRide,
+    updateRideAcceptStatus,
+    updateRideStatus,
     viewMyRides,
     viewEarningHistory,
 };

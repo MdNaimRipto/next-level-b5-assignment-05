@@ -32,6 +32,7 @@ const bcrypt_1 = __importDefault(require("bcrypt"));
 const config_1 = require("../../../config/config");
 const verifyEmailTemplate_1 = require("../../../util/templates/verifyEmailTemplate");
 const jwt_utils_1 = require("../../../util/jwt/jwt.utils");
+const user_utils_1 = require("./user.utils");
 //* User Register
 const userRegister = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     const { email, contactNumber, role } = payload;
@@ -56,7 +57,13 @@ const userRegister = (payload) => __awaiter(void 0, void 0, void 0, function* ()
             pass: config_1.envConfig.nodemailer_pass,
         },
     });
-    const verificationLink = `http://localhost:3000/auth/verify?email=${email}&num=${createdUser.contactNumber}`;
+    const jwtPayload = {
+        email: createdUser.email,
+        id: createdUser._id,
+        role: createdUser.role,
+    };
+    const token = jwt_utils_1.jwtHelpers.createToken(jwtPayload, config_1.envConfig.jwt_access_secret, config_1.envConfig.jwt_access_expires_in);
+    const verificationLink = `${config_1.envConfig.FRONTEND_URL}/auth/verify?token=${token}`;
     const htmlContent = (0, verifyEmailTemplate_1.verifyEmailTemplate)(createdUser.userName, verificationLink);
     yield transporter.sendMail({
         to: email,
@@ -66,11 +73,11 @@ const userRegister = (payload) => __awaiter(void 0, void 0, void 0, function* ()
     return null;
 });
 // * Verify Account
-const verifyAccount = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    const { email, contactNumber } = payload;
+const verifyAccount = (token) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id, email } = jwt_utils_1.jwtHelpers.jwtVerify(token, config_1.envConfig.jwt_access_secret);
     const lowercaseEmail = email.toLocaleLowerCase();
     const isExistsUser = yield users_schema_1.Users.findOne({
-        $and: [{ email: lowercaseEmail }, { contactNumber }],
+        $and: [{ email: lowercaseEmail }, { _id: id }],
     });
     if (!isExistsUser) {
         throw new ApiError_1.default(http_status_1.default.NOT_FOUND, "Email or Contact Number Not found");
@@ -79,13 +86,23 @@ const verifyAccount = (payload) => __awaiter(void 0, void 0, void 0, function* (
         throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, "Account already verified");
     }
     yield users_schema_1.Users.findOneAndUpdate({
-        $and: [{ email: lowercaseEmail }, { contactNumber }],
+        $and: [{ email: lowercaseEmail }, { _id: id }],
     }, {
         isActive: "active",
         isApproved: true,
         isVerified: true,
     });
-    return null;
+    const jwtPayload = {
+        email: isExistsUser.email,
+        id: isExistsUser._id,
+        role: isExistsUser.role,
+    };
+    const accessToken = jwt_utils_1.jwtHelpers.createToken(jwtPayload, config_1.envConfig.jwt_access_secret, config_1.envConfig.jwt_access_expires_in);
+    const refreshToken = jwt_utils_1.jwtHelpers.createToken(jwtPayload, config_1.envConfig.jwt_refresh_secret, config_1.envConfig.jwt_refresh_expires_in);
+    return {
+        accessToken,
+        refreshToken,
+    };
 });
 //* User Login
 const userLogin = (payload) => __awaiter(void 0, void 0, void 0, function* () {
@@ -94,12 +111,15 @@ const userLogin = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     if (!isExists) {
         throw new ApiError_1.default(http_status_1.default.UNAUTHORIZED, "Invalid Email Or Password");
     }
-    const { isVerified, isBlocked } = isExists;
+    const { isVerified, isBlocked, isApproved } = isExists;
     if (isBlocked) {
         throw new ApiError_1.default(http_status_1.default.UNAUTHORIZED, "This account has been blocked by ADMIN and cannot be used anymore");
     }
     if (!isVerified) {
         throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, "Your account is not verified yet. Please check email and verify your account");
+    }
+    if (!isApproved) {
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, "Your account has been suspended by the admin. Contact support for more info");
     }
     const checkPassword = yield bcrypt_1.default.compare(password, isExists.password);
     if (!checkPassword) {
@@ -112,22 +132,46 @@ const userLogin = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     };
     const accessToken = jwt_utils_1.jwtHelpers.createToken(jwtPayload, config_1.envConfig.jwt_access_secret, config_1.envConfig.jwt_access_expires_in);
     const refreshToken = jwt_utils_1.jwtHelpers.createToken(jwtPayload, config_1.envConfig.jwt_refresh_secret, config_1.envConfig.jwt_refresh_expires_in);
-    const userData = isExists.toObject();
-    delete userData.password;
     return {
         accessToken,
         refreshToken,
-        userData,
+    };
+});
+const getAuthenticatedUserDetails = (accessToken) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id, email } = jwt_utils_1.jwtHelpers.jwtVerify(accessToken, config_1.envConfig.jwt_access_secret);
+    const result = yield users_schema_1.Users.findOne({
+        _id: id,
+        email: email.toLocaleUpperCase(),
+    }).select("-password");
+    return result;
+});
+const logout = (res) => __awaiter(void 0, void 0, void 0, function* () {
+    res.clearCookie("accessToken", {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+    });
+    res.clearCookie("refreshToken", {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+    });
+    return null;
+});
+const getNewAccessToken = (refreshToken) => __awaiter(void 0, void 0, void 0, function* () {
+    const newAccessToken = yield (0, user_utils_1.createNewAccessTokenWithRefreshToken)(refreshToken);
+    return {
+        accessToken: newAccessToken,
     };
 });
 //* Update User
-const updateUser = (userID, payload, token) => __awaiter(void 0, void 0, void 0, function* () {
-    jwt_utils_1.jwtHelpers.jwtVerify(token, config_1.envConfig.jwt_access_secret);
-    const isExistsUser = yield users_schema_1.Users.findById({ _id: userID });
+const updateUser = (payload, token) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id } = jwt_utils_1.jwtHelpers.jwtVerify(token, config_1.envConfig.jwt_access_secret);
+    const isExistsUser = yield users_schema_1.Users.findById({ _id: id });
     if (!isExistsUser) {
         throw new ApiError_1.default(http_status_1.default.NOT_FOUND, "User Not Found");
     }
-    const { isBlocked, isVerified, isApproved, isActive, role, password } = payload, updatePayload = __rest(payload, ["isBlocked", "isVerified", "isApproved", "isActive", "role", "password"]);
+    const { isBlocked, isVerified, isApproved, isActive, role, password, vehicle } = payload, updatePayload = __rest(payload, ["isBlocked", "isVerified", "isApproved", "isActive", "role", "password", "vehicle"]);
     if (role !== undefined ||
         password !== undefined ||
         isBlocked !== undefined ||
@@ -158,16 +202,29 @@ const updateUser = (userID, payload, token) => __awaiter(void 0, void 0, void 0,
         }
         updatePayload.contactNumber = payload.contactNumber;
     }
-    yield users_schema_1.Users.findOneAndUpdate({ _id: userID }, updatePayload, {
+    // ✅ vehicle update logic
+    if (vehicle !== undefined) {
+        if (isExistsUser.role !== "driver") {
+            throw new ApiError_1.default(http_status_1.default.UNAUTHORIZED, "Only drivers can update vehicle details");
+        }
+        if (vehicle && Object.keys(vehicle).length > 0) {
+            Object.keys(vehicle).map((key) => {
+                const locationsKey = `vehicle.${key}`;
+                updatePayload[locationsKey] =
+                    vehicle[key];
+            });
+        }
+    }
+    yield users_schema_1.Users.findOneAndUpdate({ _id: id }, updatePayload, {
         new: true,
     });
     return null;
 });
 // * For Updating the password
 const updatePassword = (payload, token) => __awaiter(void 0, void 0, void 0, function* () {
-    jwt_utils_1.jwtHelpers.jwtVerify(token, config_1.envConfig.jwt_access_secret);
-    const { userId, currentPassword, newPassword, confirmPassword } = payload;
-    const isExistsUser = yield users_schema_1.Users.findById({ _id: userId });
+    const { id } = jwt_utils_1.jwtHelpers.jwtVerify(token, config_1.envConfig.jwt_access_secret);
+    const { currentPassword, newPassword, confirmPassword } = payload;
+    const isExistsUser = yield users_schema_1.Users.findById({ _id: id });
     if (!isExistsUser) {
         throw new ApiError_1.default(http_status_1.default.NOT_FOUND, "User Not Found");
     }
@@ -184,14 +241,15 @@ const updatePassword = (payload, token) => __awaiter(void 0, void 0, void 0, fun
     }
     const pass = yield bcrypt_1.default.hash(newPassword, Number(config_1.envConfig.salt_round));
     isExistsUser.password = pass;
-    const user = yield users_schema_1.Users.findOneAndUpdate({ _id: userId }, isExistsUser, {
+    const user = yield users_schema_1.Users.findOneAndUpdate({ _id: id }, isExistsUser, {
         new: true,
     });
     return null;
 });
 // * Update Active status
-const updateActiveStatus = (token, isActive) => __awaiter(void 0, void 0, void 0, function* () {
+const updateActiveStatus = (token, payload) => __awaiter(void 0, void 0, void 0, function* () {
     const { email, id } = jwt_utils_1.jwtHelpers.jwtVerify(token, config_1.envConfig.jwt_access_secret);
+    const { isActive } = payload;
     const isExistsUser = yield users_schema_1.Users.findOne({ $and: [{ email }, { _id: id }] });
     if (!isExistsUser) {
         throw new ApiError_1.default(http_status_1.default.NOT_FOUND, "User Not Found");
@@ -205,6 +263,9 @@ exports.UserService = {
     userRegister,
     verifyAccount,
     userLogin,
+    getAuthenticatedUserDetails,
+    logout,
+    getNewAccessToken,
     updateUser,
     updatePassword,
     updateActiveStatus,

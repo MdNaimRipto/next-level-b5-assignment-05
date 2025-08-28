@@ -20,7 +20,7 @@ const users_schema_1 = require("../app/modules/users/users.schema");
 const http_status_1 = __importDefault(require("http-status"));
 const checkAuth = (...authRoles) => (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const accessToken = req.headers.authorization;
+        const accessToken = req.cookies.accessToken;
         if (!accessToken) {
             throw new ApiError_1.default(403, "No Token Received");
         }
